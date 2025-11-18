@@ -183,15 +183,44 @@ export default {
     
     handleSwitchToInspector(data) {
       this.currentTab = 'Inspector'
-      this.$refs.inspector?.loadNewControl?.(data.manifestPath)
+      
+      // Wait for Inspector component to be mounted and ready
+      this.$nextTick(() => {
+        if (this.$refs.inspector) {
+          this.$refs.inspector.loadNewControl?.(data.manifestPath)
+          
+          // Refresh controls list after Inspector is loaded to ensure new control appears
+          setTimeout(() => {
+            this.$refs.inspector?.refreshExamples?.()
+          }, 200)
+        }
+      })
       
       // Save current page state
       this.saveCurrentPage()
     },
     
     handleRefreshControls() {
-      // Trigger refresh of controls list in Inspector
-      this.$refs.inspector?.refreshExamples?.()
+      this.$nextTick(() => {
+        // Switch tab to inspector then wait for it to load
+        if (this.currentTab !== 'Inspector') {
+          this.currentTab = 'Inspector'
+          this.$nextTick(() => {
+            if (this.$refs.inspector) {
+              setTimeout(() => {
+                this.$refs.inspector?.refreshExamples?.()
+              }, 100)
+            }
+          })
+        } else {
+          // Inspector is already the current tab, just refresh
+          if (this.$refs.inspector) {
+            setTimeout(() => {
+              this.$refs.inspector?.refreshExamples?.()
+            }, 100)
+          }
+        }
+      })
     },
     
     handleSwitchTab(tabName) {
