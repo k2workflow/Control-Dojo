@@ -350,19 +350,6 @@ The control supports four button styles matching K2 button control styles:
 
 Each style has appropriate hover and selected states with visual feedback (elevation, color changes).
 
-## Browser Compatibility
-
-### Supported Browsers
-- Chrome 60+
-- Firefox 55+
-- Safari 12+
-- Edge 79+
-
-### Requirements
-- Modern JavaScript (ES6+)
-- CSS Custom Properties support
-- Custom Elements API
-
 ## Troubleshooting
 
 ### Buttons Not Displaying

@@ -489,20 +489,6 @@ arabic-calendar {
 - **Focus Indicators**: Clear visual focus indicators
 - **Color Independence**: Information not conveyed by color alone
 
-## Browser Compatibility
-
-### Supported Browsers
-- **Chrome**: 60+
-- **Firefox**: 55+
-- **Safari**: 12+
-- **Edge**: 79+
-
-### Required Features
-- **Custom Elements**: Web Components support
-- **Intl API**: Internationalization support for Arabic dates
-- **CSS Grid**: Layout support
-- **ES6**: Modern JavaScript features
-
 ## Installation and Setup
 
 ### File Structure
