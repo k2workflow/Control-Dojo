@@ -1,0 +1,30 @@
+/*
+   K2 Button List - Designtime Styles
+   Purpose: Responsive overrides and minimal styles for shadow DOM preview in K2 Designer.
+   Most styling is handled by the shadow DOM in designtime_logic.js
+*/
+
+/* Root scope - minimal overrides for designer */
+button-list {
+    display: block;
+    width: 100%;
+    --k2-accent: var(--icon-accent-color, #1495ff);
+    --k2-base: var(--icon-base-color, #495660);
+    --k2-secondary: var(--icon-base-secondary-color, #f0f0f1);
+    --k2-border: #e5e7eb;
+    --k2-text: #1f2937;
+    --k2-radius: 6px;
+    --k2-transition: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Override K2's form-control wrapper specifically for Button List control */
+#pgWizard .form-control[customtag="button-list"] {
+    display: block !important;
+    width: 100% !important;
+}
+
+/* Override view controlwrapper for Button List */
+.controlwrapper[customtag="button-list"] {
+    width: 100% !important;
+    max-width: none !important;
+}

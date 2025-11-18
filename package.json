@@ -1,0 +1,45 @@
+{
+  "name": "k2-control-workbench",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Control Dojo with automatic examples list generation and ZIP creation",
+  "main": "server.js",
+  "scripts": {
+    "dev": "vite",
+    "dev:full": "concurrently \"npm run start\" \"npm run dev\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.js",
+    "start:backend": "node server.js",
+    "start:frontend": "vite",
+    "generate-controls": "node scripts/generate_controls_list.js"
+  },
+  "dependencies": {
+    "archiver": "^5.3.1",
+    "dompurify": "^3.3.0",
+    "express": "^4.18.2",
+    "flowbite": "^3.1.2",
+    "flowbite-vue": "^0.2.2",
+    "highlight.js": "^11.11.1",
+    "jszip": "^3.10.1",
+    "markdown-it": "^14.1.0",
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "autoprefixer": "^10.4.0",
+    "concurrently": "^8.2.2",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "vite": "^7.1.12"
+  },
+  "keywords": [
+    "k2",
+    "control",
+    "workbench",
+    "examples",
+    "zip"
+  ],
+  "author": "",
+  "license": "MIT"
+}

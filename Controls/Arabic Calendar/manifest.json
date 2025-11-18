@@ -1,0 +1,95 @@
+{
+  "icon": "icon.svg",
+  "runtimeScriptFileNames": [
+    "runtime_logic.js"
+  ],
+  "runtimeStyleFileNames": [
+    "runtime_style.css"
+  ],
+  "designtimeScriptFileNames": [
+    "designtime_logic.js"
+  ],
+  "designtimeStyleFileNames": [
+    "designtime_style.css"
+  ],
+  "imageFileNames": [],
+  "description": "A K2 (Dynamic Theme) inspired Arabic calendar control that is both style aware and has RTL support built in.",
+  "displayName": "Arabic Calendar",
+  "tagName": "arabic-calendar",
+  "valuePropertyID": "Value",
+  "supports": [
+    "Value",
+    "Width",
+    "IsVisible",
+    "IsEnabled",
+    "IsReadOnly"
+  ],
+  "events": [
+    {
+      "id": "Changed",
+      "description": "Fires when the selected date changes"
+    },
+    {
+      "id": "Focus",
+      "description": "Fires when the control receives focus"
+    },
+    {
+      "id": "Blur",
+      "description": "Fires when the control loses focus"
+    },
+    {
+      "id": "ValidationError",
+      "description": "Fires when date validation fails"
+    }
+  ],
+  "properties": [
+    {
+      "id": "Value",
+      "refreshdisplay": "true",
+      "friendlyname": "Selected Date",
+      "description": "The currently selected date value",
+      "type": "string",
+      "inputlength": "255",
+      "initialvalue": "",
+      "changesdisplay": true
+    },
+    {
+      "id": "Watermark",
+      "refreshdisplay": "true",
+      "friendlyname": "Watermark",
+      "type": "string",
+      "inputlength": "255",
+      "initialvalue": "انقر لتحديد التاريخ",
+      "changesdisplay": true
+    },
+    {
+      "id": "IsReadOnly",
+      "refreshdisplay": "true",
+      "friendlyname": "Read-Only",
+      "type": "bool",
+      "initialvalue": "false",
+      "changesdisplay": true
+    },
+    {
+      "id": "AllowManualInput",
+      "refreshdisplay": "true",
+      "friendlyname": "Allow Manual Input",
+      "type": "bool",
+      "initialvalue": "true",
+      "changesdisplay": true
+    },
+    {
+      "id": "DateFormat",
+      "refreshdisplay": "true",
+      "friendlyname": "Date Format",
+      "type": "drop",
+      "dropitems": [
+        {"value": "dd/MM/yyyy", "text": "Day/Month/Year (dd/MM/yyyy)"},
+        {"value": "MM/dd/yyyy", "text": "Month/Day/Year (MM/dd/yyyy)"},
+        {"value": "yyyy-MM-dd", "text": "Year-Month-Day (yyyy-MM-dd)"}
+      ],
+      "initialvalue": "dd/MM/yyyy",
+      "changesdisplay": true
+    }
+  ]
+}

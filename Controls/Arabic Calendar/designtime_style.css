@@ -1,0 +1,58 @@
+/*
+   K2 Arabic Calendar - Designtime Styles
+   Purpose: Minimal styles for shadow DOM preview in K2 Designer.
+   Most styling is handled by the shadow DOM in designtime_logic.js
+*/
+
+/* Root scope - minimal overrides for designer */
+arabic-calendar {
+    /* Theme variables (light defaults) */
+    --k2-font: "Tajawal", "Cairo", "Noto Naskh Arabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    --k2-text: #1f2937;
+    --k2-muted: #6b7280;
+    --k2-border: #e5e7eb;
+    --k2-bg: #ffffff;
+    --k2-bg-subtle: #f9fafb;
+    --k2-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+    /* K2 theme variables using form's icon colors with fallbacks */
+    --k2-accent: var(--icon-accent-color, #00a3d3);
+    --k2-base: var(--icon-base-color, #495660);
+    --k2-secondary: var(--icon-base-secondary-color, #f0f0f1);
+    --k2-attention: var(--icon-attention-color, #ff6b35);
+
+    direction: rtl;
+    display: block;
+    width: 100%;
+    color: var(--k2-text);
+    font-family: var(--k2-font);
+}
+
+/* Override K2's form-control wrapper specifically for Arabic Calendar control */
+#pgWizard .form-control[customtag="arabic-calendar"] {
+    display: block !important;
+    width: 100% !important;
+}
+
+/* Override view controlwrapper for Arabic Calendar */
+.controlwrapper[customtag="arabic-calendar"] {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+/* Input styling for designtime */
+arabic-calendar .date-input {
+    width: 100%;
+    font-size: 13px;
+    padding: 4px 8px 4px 24px;
+    border: none;
+    border-bottom: 1px solid var(--input-border-color, var(--k2-border));
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--k2-text);
+    outline: none;
+    font-family: var(--k2-font);
+    height: 26px;
+    box-sizing: border-box;
+    cursor: pointer;
+}

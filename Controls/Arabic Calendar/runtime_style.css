@@ -1,0 +1,530 @@
+/*
+   Modern Arabic Calendar - Runtime Styles
+   Purpose: Live control styles with full interactivity.
+   Style Awareness: Consume form-level --icon-* variables with sensible
+   fallbacks. Do not define those variables here to preserve form theming.
+*/
+/* Root scope for the component - Style Aware */
+arabic-calendar {
+    /* Theme variables (light defaults) */
+    --k2-font: "Tajawal", "Cairo", "Noto Naskh Arabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    --k2-text: #1f2937;
+    --k2-muted: #6b7280;
+    --k2-border: #e5e7eb;
+    --k2-bg: #ffffff;
+    --k2-bg-subtle: #f9fafb;
+    --k2-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+    /* K2 theme variables using form's icon colors with fallbacks
+       Note: We do NOT define --icon-* variables here to allow form styling to cascade down.
+    */
+    --k2-accent: var(--icon-accent-color, #00a3d3);
+    --k2-base: var(--icon-base-color, #4d4d4d);
+    --k2-secondary: var(--icon-base-secondary-color, #b3b3b3);
+    --k2-attention: var(--icon-attention-color, #ff6b35);
+
+    --k2-radius: 10px;
+    --k2-gap: 10px;
+    --k2-cell-size: 42px;
+    --k2-transition: 180ms cubic-bezier(.2, .8, .2, 1);
+
+    direction: rtl;
+    display: block;
+    width: 100%;
+    color: var(--k2-text);
+    font-family: var(--k2-font);
+}
+
+/* Layout */
+arabic-calendar .container {
+    position: relative;
+    min-width: 220px;
+    width: 100%;
+}
+
+arabic-calendar .input-wrap {
+    position: relative;
+    display: grid;
+}
+
+/* Input + label - K2 Theme Styling */
+arabic-calendar .date-input {
+    width: 100%;
+    font-size: 13px;
+    padding: 4px 8px 4px 24px; /* Space reserved for the SVG icon on the left - 26px height */
+    border: none;
+    border-bottom: 1px solid var(--input-border-color, var(--k2-border));
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--input-text-color, var(--k2-text));
+    outline: none;
+    transition: border-bottom-color var(--k2-transition), border-bottom-width var(--k2-transition);
+    font-family: var(--k2-font);
+    height: 26px;
+    box-sizing: border-box;
+    cursor: pointer; /* Show pointer cursor since input is not directly editable */
+}
+
+/* Focus state - thicker blue bottom border (override) */
+arabic-calendar .date-input:focus {
+    border-bottom-color: var(--k2-accent);
+    border-bottom-width: 2px;
+}
+
+/* Error state - thicker red bottom border (override) */
+arabic-calendar .date-input.error {
+    border-bottom-color: #dc2626;
+    border-bottom-width: 2px;
+}
+
+
+
+/* Removed focus styling since input is readonly */
+
+/* Floating watermark - FIXED positioning
+   Visible only when the input has no value.
+*/
+arabic-calendar .floating-watermark {
+    pointer-events: none;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--input-watermark-text-color, var(--k2-muted)) !important;
+    font-size: 14px;
+    transition: all var(--k2-transition);
+    opacity: 1;
+    display: block;
+    visibility: visible;
+}
+
+/* Removed focus watermark styling since input is readonly */
+
+/* Hide watermark completely when value is present */
+arabic-calendar .container:not(.empty) .floating-watermark {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Icon background - covers the entire icon area */
+arabic-calendar .icon-background {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 24px;
+    background: transparent;
+    pointer-events: none;
+    z-index: 0;
+    transition: background var(--k2-transition);
+}
+
+/* Calendar icon positioned inside input field */
+arabic-calendar .calendar-icon {
+    width: 16px;
+    height: 16px;
+    display: block;
+    cursor: pointer;
+    transition: filter var(--k2-transition), transform var(--k2-transition);
+    background: transparent;
+    transform: translateY(-50%) scale(0.9375); /* Scale from 16px to 15px (15/16 = 0.9375) */
+    
+    /* Position inside the input field on the left */
+    position: absolute;
+    top: 50%;
+    left: 4px; /* Center in 24px background */
+}
+
+
+
+/* Icon background hover effect is handled via JavaScript */
+
+arabic-calendar .calendar-icon:focus,
+arabic-calendar .calendar-icon:focus-visible,
+arabic-calendar .calendar-icon:active {
+    outline: none;
+    box-shadow: none;
+}
+
+/* SVG Path Styling - Style Aware
+   Rely on form-defined variables (with fallbacks) to theme the icon.
+*/
+arabic-calendar .calendar-icon .calendar-body,
+arabic-calendar .calendar-icon .calendar-header {
+    fill: var(--icon-base-color, #4d4d4d);
+}
+
+arabic-calendar .calendar-icon .calendar-grid {
+    fill: var(--icon-accent-color, #00a3d3);
+}
+
+/* SVG hover effects - only change the accent color (blue lines) */
+arabic-calendar .calendar-icon:hover .calendar-grid {
+    fill: white;
+}
+
+/* ========================================
+   POPUP STYLES - IN-COMPONENT STATE
+   The popup is positioned relative to the control when not portaled.
+   ======================================== */
+arabic-calendar .calendar-popup {
+    position: absolute;
+    top: 100%;
+    inset-inline-end: 0;
+    margin-top: 8px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 300px;
+    display: none;
+    overflow: hidden;
+    color: #1f2937;
+    direction: rtl;
+    font-family: "Tajawal", "Cairo", "Noto Naskh Arabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+arabic-calendar .calendar-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--k2-border);
+    background: color-mix(in srgb, var(--icon-accent-color, #00a3d3) 10%, transparent);
+    color: var(--icon-accent-color, #00a3d3);
+}
+
+arabic-calendar .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    padding: 8px 12px;
+    background: #ffffff;
+    color: #6b7280;
+    font-size: 11px;
+    text-align: center;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+arabic-calendar .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    padding: 12px;
+}
+
+/* ========================================
+   POPUP STYLES - PORTALED TO BODY
+   When opened, the popup is moved to <body> for overlay behavior. We use
+   [data-portal="true"] to scope styles in that context.
+   ======================================== */
+body>.calendar-popup[data-portal="true"] {
+    position: fixed !important;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 300px;
+    width: 300px;
+    overflow: visible;
+    color: #1f2937;
+    direction: rtl;
+    font-family: "Tajawal", "Cairo", "Noto Naskh Arabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+body>.calendar-popup[data-portal="true"] .calendar-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #ffffff;
+    color: #374151;
+}
+
+body>.calendar-popup[data-portal="true"] .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    padding: 8px 12px;
+    background: #ffffff;
+    color: #6b7280;
+    font-size: 11px;
+    text-align: center;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+body>.calendar-popup[data-portal="true"] .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    padding: 12px;
+}
+
+/* Month picker grid (4x3) */
+body>.calendar-popup[data-portal="true"] .calendar-grid:has(.month-btn) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+/* Year picker grid (4x3) */
+body>.calendar-popup[data-portal="true"] .calendar-grid:has(.year-btn) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+body>.calendar-popup[data-portal="true"] .calendar-footer {
+    padding: 16px;
+    border-top: 1px solid #e5e7eb;
+    background: #ffffff;
+    text-align: center;
+}
+
+body>.calendar-popup[data-portal="true"] .selected-date-display {
+    font-size: 16px;
+    color: #374151;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+/* ========================================
+   SHARED BUTTON/NAVIGATION STYLES
+   (Apply to both in-component and portaled popups)
+   ======================================== */
+arabic-calendar .nav-btn,
+body>.calendar-popup[data-portal="true"] .nav-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 0px;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    font-size: 22px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 150ms ease, color 150ms ease;
+}
+
+arabic-calendar .nav-btn:hover,
+body>.calendar-popup[data-portal="true"] .nav-btn:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+
+arabic-calendar .header-title,
+body>.calendar-popup[data-portal="true"] .header-title {
+    text-align: center;
+    font-weight: 600;
+    font-size: 16px;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    border-radius: 3px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease;
+}
+
+arabic-calendar .header-title:hover,
+body>.calendar-popup[data-portal="true"] .header-title:hover {
+    background: var(--icon-accent-color, #00a3d3);
+    color: var(--button-hover-text-color, #FFFFFF);
+    border: 1px solid var(--icon-accent-color, #00a3d3);;
+}
+
+arabic-calendar .calendar-grid button,
+arabic-calendar .calendar-grid .spacer,
+body>.calendar-popup[data-portal="true"] .calendar-grid button,
+body>.calendar-popup[data-portal="true"] .calendar-grid .spacer {
+    width: 100%;
+    height: 40px;
+    border: none;
+    border-radius: 0px;
+    background: transparent;
+    color: #374151;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease;
+    font-family: "Tajawal", "Cairo", "Noto Naskh Arabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+}
+
+arabic-calendar .calendar-grid .spacer,
+body>.calendar-popup[data-portal="true"] .calendar-grid .spacer {
+    cursor: default;
+    background: transparent;
+    border: none;
+}
+
+arabic-calendar .calendar-grid button:hover,
+body>.calendar-popup[data-portal="true"] .calendar-grid button:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+arabic-calendar .calendar-grid button.today,
+body>.calendar-popup[data-portal="true"] .calendar-grid button.today {
+    background: transparent;
+    color: #374151;
+    font-weight: 500;
+    border: 2px solid var(--icon-accent-color, #00a3d3);
+}
+
+/* When today is also selected, give it the selected styling */
+arabic-calendar .calendar-grid button.today.selected,
+body>.calendar-popup[data-portal="true"] .calendar-grid button.today.selected {
+    background: var(--icon-accent-color, #00a3d3);
+    color: white;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+}
+
+arabic-calendar .calendar-grid button.selected,
+body>.calendar-popup[data-portal="true"] .calendar-grid button.selected {
+    background: var(--icon-accent-color, #00a3d3);
+    color: white;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+}
+
+/* Month and Year Picker Styles */
+arabic-calendar .month-btn,
+arabic-calendar .year-btn,
+body>.calendar-popup[data-portal="true"] .month-btn,
+body>.calendar-popup[data-portal="true"] .year-btn {
+    width: 100%;
+    height: 40px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #374151;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease;
+    font-family: "Tajawal", "Cairo", "Noto Naskh Arabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+}
+
+arabic-calendar .month-btn:hover,
+arabic-calendar .year-btn:hover,
+body>.calendar-popup[data-portal="true"] .month-btn:hover,
+body>.calendar-popup[data-portal="true"] .year-btn:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+arabic-calendar .month-btn.selected,
+arabic-calendar .year-btn.selected,
+body>.calendar-popup[data-portal="true"] .month-btn.selected,
+body>.calendar-popup[data-portal="true"] .year-btn.selected {
+    background: var(--icon-accent-color, #00a3d3);
+    color: white;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+}
+
+/* Manual Input Validation States */
+arabic-calendar .container.validation-error .date-input {
+    border-bottom-color: #dc2626 !important;
+    border-bottom-width: 2px !important;
+}
+
+arabic-calendar .container.validation-error .date-input:focus {
+    border-bottom-color: #dc2626 !important;
+    border-bottom-width: 2px !important;
+}
+
+/* Validation valid state - returns to default styling */
+arabic-calendar .container.validation-valid:not(.validation-error) .date-input {
+    border-bottom-color: var(--input-border-color, var(--k2-border)) !important;
+    border-bottom-width: 1px !important;
+}
+
+arabic-calendar .container.validation-valid:not(.validation-error) .date-input:focus {
+    border-bottom-color: var(--k2-accent) !important;
+    border-bottom-width: 2px !important;
+}
+
+/* Manual input cursor */
+arabic-calendar .date-input:not([readonly]) {
+    cursor: text !important;
+}
+
+arabic-calendar .date-input[readonly] {
+    cursor: default !important;
+}
+
+/* Responsive */
+@media (max-width: 420px) {
+
+    arabic-calendar .calendar-popup,
+    body>.calendar-popup[data-portal="true"] {
+        min-width: 92vw;
+        inset-inline: 4vw auto;
+    }
+}
+
+/* Disabled State */
+arabic-calendar .container.is-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+arabic-calendar .container.is-disabled .date-input,
+arabic-calendar .container.is-disabled .calendar-icon {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Read-Only State */
+arabic-calendar .container.is-readonly {
+    position: relative;
+}
+
+arabic-calendar .container.is-readonly::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: color-mix(in srgb, #f8f9fa 80%, transparent);
+    pointer-events: none;
+    border-radius: 0;
+}
+
+arabic-calendar .container.is-readonly .date-input {
+    background: #f8f9fa;
+    color: #6c757d;
+    cursor: default;
+}
+
+arabic-calendar .container.is-readonly .calendar-icon .calendar-body,
+arabic-calendar .container.is-readonly .calendar-icon .calendar-header {
+    fill: #6c757d;
+    opacity: 0.7;
+}
+
+arabic-calendar .container.is-readonly .calendar-icon .calendar-grid {
+    fill: #6c757d;
+    opacity: 0.5;
+}

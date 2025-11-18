@@ -1,0 +1,657 @@
+/**
+ * CAPTCHA Box - Design-Time Styles
+ * 
+ * This file contains the design-time styling for the CAPTCHA box.
+ * It provides a clean, professional appearance for the K2 Designer
+ * preview while maintaining consistency with the runtime appearance.
+ * 
+ * Key Features:
+ * - Clean, modern design
+ * - Theme support (light/dark)
+ * - Responsive layout
+ * - Accessibility considerations
+ * - Consistent with runtime styling
+ * 
+ * @author K2 Development Team
+ * @version 1.0.0
+ */
+
+/* Custom Element Base Styles */
+captcha-control {
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Base Control Styles */
+.k2-captcha-control {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #333;
+  background: #fff;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  min-height: fit-content;
+}
+
+.k2-captcha-control:hover {
+  border-color: #007acc;
+  box-shadow: 0 4px 8px rgba(0, 122, 204, 0.15);
+}
+
+/* Header Styles - Removed for cleaner design-time preview */
+
+/* Container Styles */
+.captcha-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: fit-content;
+}
+
+/* When height is auto, container should size to content and remove gap for touching effect */
+.k2-captcha-control:not(.has-explicit-height) .captcha-container,
+.k2-captcha-control[style*="height: auto"] .captcha-container {
+  height: auto;
+  gap: 0; /* Remove gap so elements touch when height is auto */
+}
+
+/* Image Container Styles */
+.captcha-image-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 0 1 auto; /* Don't grow by default - size to content */
+  min-height: 0; /* No minimum height - size to content */
+  align-self: stretch; /* Stretch to fill available width */
+}
+
+/* Remove margin-bottom when height is auto to ensure touching effect */
+.k2-captcha-control:not(.has-explicit-height) .captcha-image-container,
+.k2-captcha-control[style*="height: auto"] .captcha-image-container {
+  margin-bottom: 0;
+}
+
+/* When explicit height is set, allow image container to grow */
+.k2-captcha-control.has-explicit-height .captcha-image-container,
+.k2-captcha-control[style*="height"]:not([style*="height: auto"]) .captcha-image-container {
+  flex: 1 1 0; /* Allow growth when height is set */
+}
+
+.captcha-image-preview {
+  flex: 1;
+  min-height: 0; /* No minimum height - size to content */
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px dashed #dee2e6;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* When explicit height is set, make preview fill available space */
+.k2-captcha-control.has-explicit-height .captcha-image-preview,
+.k2-captcha-control[style*="height"]:not([style*="height: auto"]) .captcha-image-preview {
+  height: 100%;
+  min-height: 80px;
+}
+
+.captcha-preview-text {
+  font-size: 12px;
+  color: #6c757d;
+  text-align: center;
+  padding: 16px;
+  font-weight: 500;
+}
+
+.captcha-preview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.captcha-image-preview:hover .captcha-preview-overlay {
+  opacity: 1;
+}
+
+.captcha-preview-info {
+  font-size: 10px;
+  color: #495057;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.captcha-preview-info .preview-provider,
+.captcha-preview-info .preview-theme,
+.captcha-preview-info .preview-size {
+  font-weight: 600;
+  color: #007acc;
+}
+
+/* Refresh Button Styles */
+.captcha-refresh-btn {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 8px;
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.captcha-refresh-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.captcha-refresh-btn svg {
+  width: 16px;
+  height: 16px;
+  color: #6c757d;
+}
+
+/* Input Container Styles */
+.captcha-input-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0; /* Prevent input container from shrinking - always visible */
+  flex-grow: 0; /* Don't grow - maintain natural size */
+  margin-top: auto; /* Push to bottom when there's extra space */
+  min-height: 44px; /* Ensure minimum space for input/button */
+}
+
+/* Remove margin-top when height is auto to ensure touching effect */
+.k2-captcha-control:not(.has-explicit-height) .captcha-input-container,
+.k2-captcha-control[style*="height: auto"] .captcha-input-container {
+  margin-top: 0; /* Remove auto margin so elements touch */
+}
+
+.captcha-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.captcha-input:focus {
+  outline: none;
+  border-color: #007acc;
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+}
+
+.captcha-verify-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: not-allowed;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.captcha-verify-btn:hover {
+  background: #5a6268;
+}
+
+/* Verified state */
+.captcha-verify-btn.verified {
+  background: #28a745 !important;
+  color: white;
+  cursor: default;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.captcha-verify-btn.verified:hover {
+  background: #28a745 !important;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+/* Status Styles */
+.captcha-status {
+  margin-top: 8px;
+  flex-shrink: 0; /* Prevent status from shrinking */
+}
+
+.captcha-message {
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  transition: all 0.3s ease;
+  animation: slideIn 0.3s ease-out;
+}
+
+.captcha-message.success {
+  background: #d4edda;
+  color: #155724;
+  border: 2px solid #28a745;
+  font-weight: 600;
+  animation: successPulse 0.5s ease-out;
+}
+
+.captcha-message.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 2px solid #dc3545;
+  font-weight: 600;
+  animation: errorShake 0.5s ease-out;
+}
+
+@keyframes successPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.captcha-message.info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Theme Variations */
+.k2-captcha-control.theme-dark {
+  background: #2c3e50;
+  border-color: #34495e;
+  color: #ecf0f1;
+}
+
+.k2-captcha-control.theme-dark:hover {
+  border-color: #3498db;
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.15);
+}
+
+/* Dark theme header styles removed */
+
+.k2-captcha-control.theme-dark .captcha-image-preview {
+  background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+  border-color: #4a5f7a;
+}
+
+.k2-captcha-control.theme-dark .captcha-preview-text {
+  color: #bdc3c7;
+}
+
+.k2-captcha-control.theme-dark .captcha-preview-overlay {
+  background: rgba(44, 62, 80, 0.9);
+}
+
+.k2-captcha-control.theme-dark .captcha-preview-info {
+  color: #ecf0f1;
+}
+
+.k2-captcha-control.theme-dark .captcha-preview-info .preview-provider,
+.k2-captcha-control.theme-dark .captcha-preview-info .preview-theme,
+.k2-captcha-control.theme-dark .captcha-preview-info .preview-size {
+  color: #3498db;
+}
+
+.k2-captcha-control.theme-dark .captcha-refresh-btn {
+  background: #34495e;
+  border-color: #4a5f7a;
+}
+
+.k2-captcha-control.theme-dark .captcha-refresh-btn:hover {
+  background: #4a5f7a;
+  border-color: #5d6d7e;
+}
+
+.k2-captcha-control.theme-dark .captcha-refresh-btn svg {
+  color: #bdc3c7;
+}
+
+.k2-captcha-control.theme-dark .captcha-input {
+  background: #34495e;
+  border-color: #4a5f7a;
+  color: #bdc3c7;
+}
+
+.k2-captcha-control.theme-dark .captcha-input:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.k2-captcha-control.theme-dark .captcha-verify-btn {
+  background: #7f8c8d;
+}
+
+.k2-captcha-control.theme-dark .captcha-verify-btn:hover {
+  background: #6c757d;
+}
+
+.k2-captcha-control.theme-dark .captcha-message.success {
+  background: #1e3a1e;
+  color: #90ee90;
+  border-color: #2d5a2d;
+}
+
+.k2-captcha-control.theme-dark .captcha-message.error {
+  background: #3a1e1e;
+  color: #ff6b6b;
+  border-color: #5a2d2d;
+}
+
+.k2-captcha-control.theme-dark .captcha-message.info {
+  background: #1e2a3a;
+  color: #87ceeb;
+  border-color: #2d3a5a;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .k2-captcha-control {
+    padding: 12px;
+  }
+  
+  /* LTR responsive styles - only apply if NOT RTL */
+  .k2-captcha-control:not(.rtl) .captcha-image-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .k2-captcha-control:not(.rtl) .captcha-refresh-btn {
+    align-self: flex-start;
+    width: fit-content;
+  }
+  
+  .k2-captcha-control:not(.rtl) .captcha-input-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .captcha-verify-btn {
+    width: 100%;
+  }
+}
+
+/* Accessibility Improvements */
+.k2-captcha-control:focus-within {
+  outline: 2px solid #007acc;
+  outline-offset: 2px;
+}
+
+.captcha-refresh-btn:focus,
+.captcha-verify-btn:focus,
+.captcha-input:focus {
+  outline: 2px solid #007acc;
+  outline-offset: 1px;
+}
+
+/* Animation for smooth transitions */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.k2-captcha-control {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Disabled State */
+.k2-captcha-control.is-disabled,
+.k2-captcha-control.disabled {
+  position: relative;
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.k2-captcha-control.is-disabled::after,
+.k2-captcha-control.disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+.k2-captcha-control.is-disabled .captcha-input,
+.k2-captcha-control.is-disabled .captcha-verify-btn,
+.k2-captcha-control.is-disabled .captcha-refresh-btn,
+.k2-captcha-control.disabled .captcha-input,
+.k2-captcha-control.disabled .captcha-verify-btn,
+.k2-captcha-control.disabled .captcha-refresh-btn {
+  cursor: not-allowed;
+}
+
+/* Read-Only State */
+.k2-captcha-control.is-readonly,
+.k2-captcha-control.read-only {
+  position: relative;
+}
+
+.k2-captcha-control.is-readonly::before,
+.k2-captcha-control.read-only::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(248, 249, 250, 0.8);
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+.k2-captcha-control.is-readonly .captcha-input,
+.k2-captcha-control.read-only .captcha-input {
+  background: #f8f9fa;
+  cursor: not-allowed;
+  color: #6c757d;
+}
+
+.k2-captcha-control.is-readonly .captcha-verify-btn,
+.k2-captcha-control.is-readonly .captcha-refresh-btn,
+.k2-captcha-control.read-only .captcha-verify-btn,
+.k2-captcha-control.read-only .captcha-refresh-btn {
+  display: none;
+}
+
+/* Accessibility Improvements */
+.k2-captcha-control:focus-within {
+  outline: 2px solid #007acc;
+  outline-offset: 2px;
+}
+
+.captcha-refresh-btn:focus,
+.captcha-verify-btn:focus,
+.captcha-input:focus {
+  outline: 2px solid #007acc;
+  outline-offset: 1px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .k2-captcha-control {
+    border-width: 2px;
+  }
+  
+  .captcha-input,
+  .captcha-verify-btn,
+  .captcha-refresh-btn {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .k2-captcha-control,
+  .captcha-refresh-btn,
+  .captcha-verify-btn,
+  .captcha-input,
+  .captcha-message {
+    transition: none;
+    animation: none;
+  }
+  
+  .captcha-refresh-btn:hover svg {
+    transform: none;
+  }
+}
+
+/* K2 Width Overrides for Responsive Design */
+/* Forms override - ensures control expands to full width in forms */
+#pgWizard .form-control[customtag="captcha-control"] {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Views override - ensures control expands to full width in views */
+.controlwrapper[customtag="captcha-control"] {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+/* Additional override for editor cells in views */
+.editor-cell[customtag="captcha-control"],
+.editor-cell captcha-control {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Ensure the control itself doesn't get constrained */
+captcha-control {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+.k2-captcha-control {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* RTL Support for Arabic and other RTL languages */
+.k2-captcha-control.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+/* RTL Image Container - Move refresh button to left */
+.k2-captcha-control.rtl .captcha-image-container {
+  flex-direction: row-reverse !important;
+  direction: ltr !important; /* Override inherited RTL so row-reverse works correctly */
+}
+
+/* RTL Input Container - Move verify button to left */
+.k2-captcha-control.rtl .captcha-input-container {
+  flex-direction: row-reverse !important;
+  direction: ltr !important; /* Override inherited RTL so row-reverse works correctly */
+}
+
+/* RTL Input - Text starts from right */
+.k2-captcha-control.rtl .captcha-input {
+  direction: rtl;
+  text-align: right;
+}
+
+/* RTL Preview Text - Align right */
+.k2-captcha-control.rtl .captcha-preview-text {
+  text-align: center;
+  direction: rtl;
+}
+
+/* RTL Preview Info - Align right */
+.k2-captcha-control.rtl .captcha-preview-info {
+  text-align: center;
+  direction: rtl;
+}
+
+/* RTL Message - Align right */
+.k2-captcha-control.rtl .captcha-message {
+  text-align: center;
+  direction: rtl;
+}
+
+/* RTL Responsive Design - Maintain RTL layout on mobile */
+@media (max-width: 480px) {
+  .k2-captcha-control.rtl .captcha-image-container {
+    flex-direction: column;
+  }
+  
+  .k2-captcha-control.rtl .captcha-refresh-btn {
+    align-self: flex-end;
+  }
+  
+  .k2-captcha-control.rtl .captcha-input-container {
+    flex-direction: column;
+  }
+}
+
+/* RTL Dark Theme - Inherit RTL styles */
+.k2-captcha-control.rtl.theme-dark {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Print Styles */
+@media print {
+  .k2-captcha-control {
+    border: 1px solid #000;
+    box-shadow: none;
+    background: #fff;
+    color: #000;
+  }
+  
+  .captcha-refresh-btn,
+  .captcha-verify-btn {
+    display: none;
+  }
+}

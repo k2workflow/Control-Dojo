@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 font-sans;
+}
+
+/* Apply dark mode class to body when in dark mode */
+body.dark {
+  @apply bg-dark-900 text-white;
+}
+
+/* Legacy component styles */
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg transition-colors;
+  }
+  
+  .dark .btn-primary {
+    @apply bg-orange-600 hover:bg-orange-700;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded-lg transition-colors;
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2 border rounded-lg transition-colors duration-200;
+    @apply bg-white border-gray-300 text-gray-900 placeholder-gray-500;
+    @apply focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  }
+  
+  .input-field.dark {
+    @apply bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400;
+    @apply focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+}
+
+/* Dark mode dropdown options */
+.dark select option {
+  @apply bg-dark-700 text-white;
+}
+
+/* Dark mode input and select styling */
+.dark input,
+.dark select {
+  @apply bg-dark-700 border-dark-600 text-white;
+}
+
+.dark input::placeholder,
+.dark select::placeholder {
+  @apply text-dark-400;
+}
+
+/* Ensure proper contrast for dark mode elements */
+.dark input:focus,
+.dark select:focus {
+  @apply border-orange-600 ring-orange-500 bg-dark-700 text-white;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1) !important;
+}
+
+/* Light mode input and select styling */
+.light input,
+.light select {
+  @apply bg-white border-gray-300 text-slate-900;
+}
+
+.light input::placeholder,
+.light select::placeholder {
+  @apply text-gray-500;
+}
+
+/* Ensure proper contrast for light mode elements */
+.light input:focus,
+.light select:focus {
+  @apply border-primary-600 ring-primary-500 bg-white text-slate-900;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1) !important;
+}

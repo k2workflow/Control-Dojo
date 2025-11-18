@@ -1,0 +1,23 @@
+# Ignore auto-generated index files that change frequently
+Controls/_autolist.json
+Controls/_crawler.json
+
+# Common development files
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+examples/*.zip
+Controls/*.zip
+dist/*
+

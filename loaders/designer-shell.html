@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: transparent;
+        }
+
+        .designer-canvas {
+            padding: 8px;
+            min-height: 100%;
+            background: transparent;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="designer-canvas">
+        <!-- The workbench will inject <tagName> here and the design-time CSS/JS files -->
+        <div id="slot"></div>
+    </div>
+    
+    <!-- Load jQuery for controls that depend on it -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    
+    <!-- Load K2 base dependencies before control scripts -->
+    <!-- K2ControlsAPI must load first as it creates the K2 global object -->
+    <script src="./Script/K2ControlsAPI.js"></script>
+    <!-- K2BaseControl extends HTMLElement and uses K2 APIs -->
+    <script src="./Script/k2-base-control.js"></script>
+    
+    <script type="module">
+        // Load K2 shims for designer mode
+        import { installK2Shim } from './k2-shims.js';
+        
+        // Install shims when the iframe loads
+        installK2Shim(window, (msg) => {
+            console.log(msg);
+            // Forward to parent if possible
+            if (window.parent && window.parent !== window) {
+                try {
+                    window.parent.postMessage({ type: 'k2-log', message: msg }, '*');
+                } catch (e) {
+                    // Ignore cross-origin errors
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Customer Central
+    url: https://customer.nintex.com/_login/
+    about: For questions or assistance, contact Nintex Support instead of using GitHub issues. You can login to your Customer Central account to create a support ticket.
+

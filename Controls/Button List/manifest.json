@@ -1,0 +1,246 @@
+{
+  "icon": "icon.svg",
+  "designtimeScriptFileNames": ["designtime_logic.js"],
+  "runtimeScriptFileNames": ["runtime_logic.js"],
+  "designtimeStyleFileNames": ["designtime_style.css"],
+  "runtimeStyleFileNames": ["runtime_style.css"],
+  "displayName": "Button List",
+  "tagName": "button-list",
+  "description": "A flexible button list control that displays a collection of interactive buttons with customizable styling, layout options, and icon support. Supports both static data and SmartObject binding for dynamic content.",
+  "supports": [
+    "lo", 
+    "Width", 
+    "Height",
+    "Value", 
+    "IsVisible", 
+    "IsEnabled", 
+    "IsReadOnly",
+    "DataBinding"
+  ],
+  "events": [
+    { "id": "OnChanged", "friendlyname": "Changed" },
+    { "id": "OnButtonClick", "friendlyname": "Button Clicked" }
+  ],
+  "properties": [
+    {
+      "id": "Value",
+      "refreshdisplay": "true",
+      "friendlyname": "Value",
+      "type": "string",
+      "inputlength": "255",
+      "initialvalue": null,
+      "changesdisplay": true
+    },
+    {
+      "id": "List",
+      "refreshdisplay": "true",
+      "friendlyname": "List Items",
+      "type": "listdata",
+      "category": "Detail",
+      "initialvalue": "[{\"display\": \"Item 1\", \"value\": \"1\"},{\"display\": \"Item 2\",\"value\": \"2\"}]"
+    },
+    {
+      "id": "MaxItems",
+      "refreshdisplay": "true",
+      "friendlyname": "Max Items",
+      "type": "string",
+      "inputlength": "50",
+      "initialvalue": "0",
+      "changesdisplay": true,
+      "description": "Maximum number of items to display (0 = unlimited). Accepts numeric values as strings."
+    },
+    {
+      "id": "ButtonLayout",
+      "refreshdisplay": "true",
+      "friendlyname": "Button Layout",
+      "type": "drop",
+      "initialvalue": "horizontal",
+      "changesdisplay": true,
+      "description": "Layout mode for the buttons",
+      "dropitems": [
+        { "value": "horizontal", "text": "Horizontal" },
+        { "value": "vertical", "text": "Vertical" },
+        { "value": "grid", "text": "Grid" }
+      ]
+    },
+    {
+      "id": "ButtonSize",
+      "refreshdisplay": "true",
+      "friendlyname": "Button Size",
+      "type": "drop",
+      "initialvalue": "medium",
+      "changesdisplay": true,
+      "description": "Size of the buttons",
+      "dropitems": [
+        { "value": "small", "text": "Small" },
+        { "value": "medium", "text": "Medium" },
+        { "value": "large", "text": "Large" }
+      ]
+    },
+    {
+      "id": "ButtonStyle",
+      "refreshdisplay": "true",
+      "friendlyname": "Button Style",
+      "type": "drop",
+      "initialvalue": "normal",
+      "changesdisplay": true,
+      "description": "Button style matching K2 button control styles",
+      "dropitems": [
+        { "value": "normal", "text": "Normal" },
+        { "value": "main", "text": "Main Action" },
+        { "value": "quiet", "text": "Quiet Action" },
+        { "value": "destructive", "text": "Destructive Action" }
+      ]
+    },
+    {
+      "id": "ButtonHeight",
+      "refreshdisplay": "true",
+      "friendlyname": "Button Height",
+      "type": "string",
+      "inputlength": "50",
+      "initialvalue": "",
+      "changesdisplay": true,
+      "description": "Height for individual buttons (e.g., '40px', '2rem', 'auto'). Leave empty to use default size."
+    },
+    {
+      "id": "ButtonWidth",
+      "refreshdisplay": "true",
+      "friendlyname": "Button Width",
+      "type": "string",
+      "inputlength": "50",
+      "initialvalue": "",
+      "changesdisplay": true,
+      "description": "Width for individual buttons (e.g., '100px', '150px', 'auto'). Leave empty to use default size."
+    },
+    {
+      "id": "ButtonRadius",
+      "refreshdisplay": "true",
+      "friendlyname": "Button Border Radius",
+      "type": "string",
+      "inputlength": "50",
+      "initialvalue": "6px",
+      "changesdisplay": true,
+      "description": "Border radius for buttons (e.g., '6px', '50%', '0'). Default is 6px."
+    },
+    {
+      "id": "ButtonSpacing",
+      "refreshdisplay": "true",
+      "friendlyname": "Button Spacing",
+      "type": "string",
+      "inputlength": "50",
+      "initialvalue": "8px",
+      "changesdisplay": true,
+      "description": "Spacing between buttons (e.g., '8px', '12px', '1rem'). Default is 8px."
+    },
+    {
+      "id": "IconPosition",
+      "refreshdisplay": "true",
+      "friendlyname": "Icon Position",
+      "type": "drop",
+      "initialvalue": "left",
+      "changesdisplay": true,
+      "description": "Position of icon relative to text",
+      "dropitems": [
+        { "value": "left", "text": "Left of Text" },
+        { "value": "right", "text": "Right of Text" },
+        { "value": "top", "text": "Above Text" },
+        { "value": "bottom", "text": "Below Text" },
+        { "value": "only", "text": "Icon Only (hide text)" },
+        { "value": "none", "text": "Text Only (hide icon)" }
+      ]
+    },
+    {
+      "id": "ImageSize",
+      "refreshdisplay": "true",
+      "friendlyname": "Image Size",
+      "type": "string",
+      "inputlength": "50",
+      "initialvalue": "20px",
+      "changesdisplay": true,
+      "description": "Size for images (e.g., '20px', '24px', '50%', '1.5rem'). Use percentage for relative sizing."
+    },
+    {
+      "id": "ImageFit",
+      "refreshdisplay": "true",
+      "friendlyname": "Image Fit Mode",
+      "type": "drop",
+      "initialvalue": "contain",
+      "changesdisplay": true,
+      "description": "How images should be sized within the button",
+      "dropitems": [
+        { "value": "contain", "text": "Contain (fit within bounds)" },
+        { "value": "cover", "text": "Cover (fill area)" },
+        { "value": "fill", "text": "Fill (stretch)" },
+        { "value": "scale-down", "text": "Scale Down (smaller only)" },
+        { "value": "none", "text": "None (original size)" }
+      ]
+    },
+    {
+      "id": "ContentAlignment",
+      "refreshdisplay": "true",
+      "friendlyname": "Content Alignment",
+      "type": "drop",
+      "initialvalue": "center",
+      "changesdisplay": true,
+      "description": "Horizontal alignment of content within buttons",
+      "dropitems": [
+        { "value": "start", "text": "Start (Left)" },
+        { "value": "center", "text": "Center" },
+        { "value": "end", "text": "End (Right)" }
+      ]
+    },
+    {
+      "id": "IconSpacing",
+      "refreshdisplay": "true",
+      "friendlyname": "Icon Spacing",
+      "type": "string",
+      "inputlength": "50",
+      "initialvalue": "8px",
+      "changesdisplay": true,
+      "description": "Spacing between icon and text (e.g., '8px', '12px', '0.5rem')"
+    },
+    {
+      "id": "IsReadOnly",
+      "refreshdisplay": "true",
+      "friendlyname": "Is Read Only",
+      "type": "bool",
+      "initialvalue": false,
+      "changesdisplay": true,
+      "description": "When true, prevents user interaction with the buttons. Default is false."
+    }
+  ],
+  "methods": [
+    {
+      "id": "clearSelection",
+      "displayname": "Clear Selection",
+      "returntype": "None",
+      "description": "Clear the current selection",
+      "parameters": []
+    },
+    {
+      "id": "selectById",
+      "displayname": "Select By ID",
+      "returntype": "None",
+      "description": "Select a button by its ID (value property)",
+      "parameters": [
+        { "name": "id", "type": "text" }
+      ]
+    },
+    {
+      "id": "selectByText",
+      "displayname": "Select By Text",
+      "returntype": "None",
+      "description": "Select a button by its display text",
+      "parameters": [
+        { "name": "text", "type": "text" }
+      ]
+    },
+    {
+      "id": "refresh",
+      "displayname": "Refresh",
+      "returntype": "None",
+      "description": "Force re-render the control",
+      "parameters": []
+    }
+  ]
+}

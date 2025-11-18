@@ -1,0 +1,230 @@
+/* Button List Control - Runtime Styles */
+/* Modern, responsive styling for the Button List control */
+
+button-list {
+    display: block;
+    width: 100%;
+    --button-accent: var(--icon-accent-color, #1495ff);
+    --button-base: var(--icon-base-color, #495660);
+    --button-secondary: var(--icon-base-secondary-color, #f0f0f1);
+    --button-border: #e5e7eb;
+    --button-text: #1f2937;
+    --button-radius: 6px;
+    --button-spacing: 8px;
+    --button-transition: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.button-list-container {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.button-list-wrapper {
+    display: flex;
+    gap: var(--button-spacing, 8px);
+}
+
+.button-list-wrapper.button-layout-horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.button-list-wrapper.button-layout-vertical {
+    flex-direction: column;
+}
+
+.button-list-wrapper.button-layout-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--button-spacing, 8px);
+}
+
+.button-list-wrapper.button-layout-grid .button-item {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0; /* Allow shrinking below content size in grid */
+    flex-shrink: 1; /* Allow buttons to shrink in grid layout */
+}
+
+.button-list-wrapper.button-layout-grid .button-content {
+    min-width: 0; /* Allow content to shrink */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.button-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 1px solid var(--primary-button-hover-border-color, #00abf0);
+    border-radius: var(--button-radius, var(--button-radius));
+    background: var(--primary-button-background-color, rgb(0, 135, 189));
+    color: var(--primary-button-hover-background-color, #ffffff);
+    cursor: pointer;
+    transition: all var(--button-transition);
+    font-size: 14px;
+    font-family: inherit;
+    text-align: center;
+    min-height: var(--button-height, 40px);
+    height: var(--button-height, auto);
+    min-width: fit-content;
+    width: var(--button-width, auto);
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.button-item[data-has-width] {
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.button-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--button-accent);
+    opacity: 0;
+    transition: opacity var(--button-transition);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.button-item:hover:not(.selected):not(:disabled) {
+    background-color: var(--primary-button-hover-background-color, rgb(0, 171, 240));
+    color: var(--primary-button-focus-text-color, #8addff);
+    border-color: var(--primary-button-hover-border-color, #00abf0);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(20, 149, 255, 0.15);
+}
+
+.button-item:active:not(.selected):not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(20, 149, 255, 0.2);
+}
+
+.button-item.selected {
+    background-color: var(--primary-button-hover-background-color, rgb(0, 171, 240));
+    color: var(--primary-button-focus-text-color, #8addff);
+    border-color: var(--primary-button-hover-border-color, #00abf0);
+    box-shadow: 0 2px 8px rgba(20, 149, 255, 0.3);
+}
+
+.button-item.selected::before {
+    opacity: 0.1;
+}
+
+.button-item:disabled,
+.button-item.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.button-item.button-size-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 32px;
+    gap: 6px;
+}
+
+.button-item.button-size-medium {
+    padding: 10px 16px;
+    font-size: 14px;
+    min-height: 40px;
+    gap: 8px;
+}
+
+.button-item.button-size-large {
+    padding: 14px 20px;
+    font-size: 16px;
+    min-height: 48px;
+    gap: 10px;
+}
+
+.button-content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: var(--content-align, center);
+    gap: var(--icon-spacing, 8px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    max-width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.button-content-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 0 1 auto;
+}
+
+.button-content img {
+    width: var(--image-size, 20px);
+    height: var(--image-size, 20px);
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: var(--image-fit, contain);
+    object-position: center;
+    display: block;
+    flex-shrink: 0;
+}
+
+.button-list-container.is-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.button-list-container.is-readonly {
+    position: relative;
+}
+
+.button-list-container.is-readonly::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: color-mix(in srgb, #f8f9fa 80%, transparent);
+    pointer-events: none;
+    border-radius: var(--button-radius);
+}
+
+.button-list-container.is-readonly .button-item {
+    cursor: default;
+}
+
+.button-list-container.is-readonly .button-item:hover {
+    background-color: var(--primary-button-background-color, rgb(0, 135, 189));
+    border-color: var(--primary-button-hover-border-color, #00abf0);
+    transform: none;
+    box-shadow: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .button-list-wrapper.button-layout-horizontal {
+        flex-direction: column;
+    }
+
+    .button-list-wrapper.button-layout-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+}
+

@@ -1,0 +1,163 @@
+{
+  "icon": "icon.svg",
+  "runtimeScriptFileNames": [
+    "runtime_logic.js"
+  ],
+  "runtimeStyleFileNames": [
+    "runtime_style.css"
+  ],
+  "designtimeScriptFileNames": [
+    "designtime_logic.js"
+  ],
+  "designtimeStyleFileNames": [
+    "designtime_style.css"
+  ],
+  "imageFileNames": [
+    "icon.svg"
+  ],
+  "description": "A CAPTCHA box that provides bot protection using open-source CAPTCHA services. Supports multiple CAPTCHA providers and customizable verification.",
+  "displayName": "CAPTCHA Box",
+  "tagName": "captcha-control",
+  "valuePropertyID": "CaptchaResponse",
+  "supports": [
+    "Value",
+    "Width",
+    "Height",
+    "IsVisible",
+    "IsEnabled",
+    "IsReadOnly"
+  ],
+  "events": [
+    {
+      "id": "Changed",
+      "description": "Fires when the CAPTCHA input value changes"
+    },
+    {
+      "id": "Focus",
+      "description": "Fires when the control receives focus"
+    },
+    {
+      "id": "Blur",
+      "description": "Fires when the control loses focus"
+    },
+    {
+      "id": "OnEnter",
+      "description": "Fires when Enter key is pressed"
+    },
+    {
+      "id": "Verified",
+      "description": "Fires when CAPTCHA verification succeeds"
+    },
+    {
+      "id": "VerificationFailed",
+      "description": "Fires when CAPTCHA verification fails"
+    }
+  ],
+  "properties": [
+    {
+      "id": "Value",
+      "refreshdisplay": "true",
+      "friendlyname": "Verified",
+      "type": "bool",
+      "initialvalue": "false",
+      "changesdisplay": true
+    },
+    {
+      "id": "CaptchaResponse",
+      "refreshdisplay": "true",
+      "friendlyname": "CAPTCHA Response",
+      "type": "string",
+      "inputlength": "255",
+      "initialvalue": "",
+      "changesdisplay": true
+    },
+    {
+      "id": "CaptchaProvider",
+      "refreshdisplay": "true",
+      "friendlyname": "CAPTCHA Provider",
+      "type": "string",
+      "inputlength": "50",
+      "initialvalue": "opencaptcha",
+      "changesdisplay": true
+    },
+    {
+      "id": "ApiEndpoint",
+      "refreshdisplay": "true",
+      "friendlyname": "API Endpoint",
+      "type": "string",
+      "inputlength": "255",
+      "initialvalue": "https://api.opencaptcha.io/",
+      "changesdisplay": true
+    },
+    {
+      "id": "ApiKey",
+      "refreshdisplay": "true",
+      "friendlyname": "API Key (if required)",
+      "type": "string",
+      "inputlength": "255",
+      "initialvalue": "",
+      "changesdisplay": true
+    },
+    {
+      "id": "Placeholder",
+      "refreshdisplay": "true",
+      "friendlyname": "Input Placeholder",
+      "type": "string",
+      "inputlength": "255",
+      "initialvalue": "",
+      "changesdisplay": true
+    },
+    {
+      "id": "VerifyButtonText",
+      "refreshdisplay": "true",
+      "friendlyname": "Verify Button Text",
+      "type": "string",
+      "inputlength": "50",
+      "initialvalue": "",
+      "changesdisplay": true
+    },
+    {
+      "id": "SuccessMessage",
+      "refreshdisplay": "true",
+      "friendlyname": "Success Message",
+      "type": "string",
+      "inputlength": "255",
+      "initialvalue": "",
+      "changesdisplay": true
+    },
+    {
+      "id": "ErrorMessage",
+      "refreshdisplay": "true",
+      "friendlyname": "Error Message",
+      "type": "string",
+      "inputlength": "255",
+      "initialvalue": "",
+      "changesdisplay": true
+    },
+    {
+      "id": "AutoRefresh",
+      "refreshdisplay": "true",
+      "friendlyname": "Auto Refresh on Error",
+      "type": "bool",
+      "initialvalue": "true",
+      "changesdisplay": true
+    },
+    {
+      "id": "Theme",
+      "refreshdisplay": "true",
+      "friendlyname": "Theme",
+      "type": "string",
+      "inputlength": "20",
+      "initialvalue": "light",
+      "changesdisplay": true
+    },
+    {
+      "id": "IsReadOnly",
+      "refreshdisplay": "true",
+      "friendlyname": "Read-Only",
+      "type": "bool",
+      "initialvalue": "false",
+      "changesdisplay": true
+    }
+  ]
+}
