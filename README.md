@@ -1,6 +1,7 @@
 # Control Dojo
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Release](https://img.shields.io/github/v/release/k2workflow/control-dojo?label=release)](https://github.com/k2workflow/control-dojo/releases)
 ![Node](https://img.shields.io/badge/node-%3E%3D14-brightgreen)
 
 A modern web-based development environment for K2/Nintex custom controls with both debugging and control generation capabilities.
@@ -265,7 +266,7 @@ Clone or fork this repository to build a customized version of Control Dojo for 
 
 ## Support
 
-For questions, bug reports, or feature requests, contact Nintex Support through the standard support channels. GitHub issues and pull requests are not monitored for this project.
+For assistance, review `SUPPORT.md` for detailed instructions on opening tickets through Nintex Customer Central. GitHub issues and pull requests are not monitored for this project.
 
 ## License
 
