@@ -12,6 +12,8 @@ function safeRaisePropertyChanged(ctrl, prop) {
   }
 }
 
+const BUTTON_LIST_DEFAULT_HEIGHT = '55px';
+
 // Runtime control: full interactivity with K2 List API support
 if (!window.customElements.get('button-list')) {
   window.customElements.define('button-list', class K2ButtonListControl extends K2BaseControl {
@@ -32,7 +34,7 @@ if (!window.customElements.get('button-list')) {
     _isVisible = true;
     _isEnabled = true;
     _isReadOnly = false;
-    _height = null;
+    _height = BUTTON_LIST_DEFAULT_HEIGHT;
     _width = null;
 
     // Button list specific properties
@@ -79,9 +81,10 @@ if (!window.customElements.get('button-list')) {
 
     get Height() { return this._height; }
     set Height(val) {
-      this._height = val;
+      const normalized = (val === undefined || val === null || val === '') ? BUTTON_LIST_DEFAULT_HEIGHT : String(val);
+      this._height = normalized;
       if (this._hasRendered && this.container) {
-        const v = (val === undefined || val === null || val === '') ? '' : (isNaN(val) ? String(val) : `${val}px`);
+        const v = (normalized === undefined || normalized === null || normalized === '') ? '' : (isNaN(normalized) ? String(normalized) : `${normalized}px`);
         this.container.style.height = v;
       }
       safeRaisePropertyChanged(this, 'Height');
@@ -266,7 +269,7 @@ if (!window.customElements.get('button-list')) {
       this._isVisible = true;
       this._isEnabled = true;
       this._isReadOnly = false;
-      this._height = null;
+      this._height = BUTTON_LIST_DEFAULT_HEIGHT;
       this._width = null;
 
       this._maxItems = 0;
@@ -834,7 +837,8 @@ if (!window.customElements.get('button-list')) {
               .button-list-container.is-readonly {
                 position: relative;
               }
-              .button-list-container.is-readonly::before {
+              /* Disabled overlay applied to each button when container is disabled */
+              .button-list-container.is-disabled .button-item::after {
                 content: '';
                 position: absolute;
                 top: 0;
@@ -843,7 +847,19 @@ if (!window.customElements.get('button-list')) {
                 bottom: 0;
                 background: color-mix(in srgb, #f8f9fa 80%, transparent);
                 pointer-events: none;
-                border-radius: var(--button-radius);
+                border-radius: var(--button-radius, 6px);
+              }
+              /* Readonly overlay applied to each button when container is readonly */
+              .button-list-container.is-readonly .button-item::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: color-mix(in srgb, #f8f9fa 80%, transparent);
+                pointer-events: none;
+                border-radius: var(--button-radius, 6px);
               }
               .button-list-container.is-readonly .button-item {
                 cursor: default;

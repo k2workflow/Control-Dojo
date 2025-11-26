@@ -65,7 +65,7 @@ Button List/
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | **Width** | String | `"100%"` | Control width |
-| **Height** | String | `"auto"` | Control height |
+| **Height** | String | `"55px"` | Control height (minimum space for one row of medium buttons) |
 | **IsVisible** | Boolean | `true` | Whether the control is visible |
 | **IsEnabled** | Boolean | `true` | Whether the control is enabled and interactive |
 | **IsReadOnly** | Boolean | `false` | Whether the control is in read-only mode |
@@ -349,6 +349,19 @@ The control supports four button styles matching K2 button control styles:
 - **Destructive Action**: Red background (#b71c1c) with white text - for destructive actions
 
 Each style has appropriate hover and selected states with visual feedback (elevation, color changes).
+
+## Browser Compatibility
+
+### Supported Browsers
+- Chrome 60+
+- Firefox 55+
+- Safari 12+
+- Edge 79+
+
+### Requirements
+- Modern JavaScript (ES6+)
+- CSS Custom Properties support
+- Custom Elements API
 
 ## Troubleshooting
 

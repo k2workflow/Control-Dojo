@@ -1,0 +1,24 @@
+:root drag-drop-control {
+  display: block;
+  width: 100%;
+}
+
+drag-drop-control[dir="rtl"] {
+  direction: rtl;
+}
+
+drag-drop-control[dir="ltr"] {
+  direction: ltr;
+}
+
+#pgWizard .form-control[customtag="drag-drop-control"] {
+  display: block !important;
+  width: 100% !important;
+}
+
+.controlwrapper[customtag="drag-drop-control"] {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+

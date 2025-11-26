@@ -315,38 +315,44 @@ Events define what actions your control can trigger for K2 workflows and rules. 
 
 ### Basic Event Structure
 
+Use `displayname` to define the designer-facing label for an event while keeping the `id` stable for runtime wiring.
+
 ```json
 {
   "events": [
-    { "id": "Changed" },
-    { "id": "Focus" },
-    { "id": "Blur" },
-    { "id": "OnEnter" }
+    { "id": "Changed", "displayname": "Changed" },
+    { "id": "Focus", "displayname": "Focus" },
+    { "id": "Blur", "displayname": "Blur" },
+    { "id": "OnEnter", "displayname": "Enter" }
   ]
 }
 ```
 
 ### Enhanced Event Structure (Optional)
 
-You can add descriptions to events to make them clearer:
+You can add descriptions (and keep using `displayname`) to make events clearer:
 
 ```json
 {
   "events": [
     { 
       "id": "Changed",
+      "displayname": "Changed",
       "description": "Fires when the control value is modified"
     },
     { 
       "id": "Focus",
+      "displayname": "Focus",
       "description": "Fires when the control receives focus"
     },
     { 
       "id": "Blur",
+      "displayname": "Blur",
       "description": "Fires when the control loses focus"
     },
     { 
       "id": "OnEnter",
+      "displayname": "Enter",
       "description": "Fires when the user presses Enter key"
     }
   ]
@@ -371,10 +377,10 @@ You can define custom events specific to your control. Here's an example:
 ```json
 {
   "events": [
-    { "id": "Changed" },
-    { "id": "FileUploaded" },
-    { "id": "UploadProgress" },
-    { "id": "UploadComplete" }
+    { "id": "Changed", "displayname": "Changed" },
+    { "id": "FileUploaded", "displayname": "File Uploaded" },
+    { "id": "UploadProgress", "displayname": "Upload Progress" },
+    { "id": "UploadComplete", "displayname": "Upload Complete" }
   ]
 }
 ```
@@ -445,10 +451,10 @@ You can organize files in subfolders:
     "IsReadOnly"
   ],
   "events": [
-    { "id": "Changed", "description": "Fires when the selected date changes" },
-    { "id": "Focus", "description": "Fires when the control receives focus" },
-    { "id": "Blur", "description": "Fires when the control loses focus" },
-    { "id": "ValidationError", "description": "Fires when date validation fails" }
+    { "id": "Changed", "displayname": "Changed", "description": "Fires when the selected date changes" },
+    { "id": "Focus", "displayname": "Focus", "description": "Fires when the control receives focus" },
+    { "id": "Blur", "displayname": "Blur", "description": "Fires when the control loses focus" },
+    { "id": "ValidationError", "displayname": "Validation Error", "description": "Fires when date validation fails" }
   ],
   "properties": [
     {
@@ -497,6 +503,50 @@ You can organize files in subfolders:
 ```
 
 **See:** [Arabic Calendar Control](../Controls/Arabic%20Calendar/) for the complete implementation.
+
+### Drag and Drop Control Example
+
+```json
+{
+  "icon": "icon.svg",
+  "displayName": "Drag and Drop",
+  "tagName": "drag-drop-control",
+  "supports": [
+    "Property",
+    "Width",
+    "Height",
+    "Value",
+    "IsVisible",
+    "IsEnabled",
+    "IsReadOnly"
+  ],
+  "events": [
+    { "id": "OnChanged", "displayname": "Changed" },
+    { "id": "OnFocus", "displayname": "Focus" },
+    { "id": "OnBlur", "displayname": "Blur" },
+    { "id": "OnEnter", "displayname": "Enter" }
+  ],
+  "properties": [
+    { "id": "Watermark", "friendlyname": "Drop Zone Text", "type": "text", "initialvalue": "", "changesdisplay": true },
+    { "id": "Accept", "friendlyname": "Accepted File Types", "type": "text", "initialvalue": "", "changesdisplay": true },
+    { "id": "Tooltip", "friendlyname": "Tooltip", "type": "text", "initialvalue": "Click here to attach a file", "changesdisplay": true },
+    { "id": "MaxSize", "friendlyname": "Max Size", "type": "text", "initialvalue": "", "changesdisplay": true },
+    { "id": "ShowInformation", "friendlyname": "Show Information", "type": "bool", "initialvalue": "true", "changesdisplay": true },
+    { "id": "Borderless", "friendlyname": "Borderless", "type": "bool", "initialvalue": "false", "changesdisplay": true },
+    { "id": "IsReadOnly", "friendlyname": "Read Only", "type": "bool", "initialvalue": "false" },
+    { "id": "Width", "friendlyname": "Width", "type": "text", "initialvalue": "100%" },
+    { "id": "Height", "friendlyname": "Height", "type": "text", "initialvalue": "70px" },
+    { "id": "Value", "friendlyname": "Value", "type": "text", "initialvalue": "" }
+  ]
+}
+```
+
+**Highlights**:
+- Click-to-browse fallback plus drag surface
+- JSON Value payload that captures selected file metadata
+- Optional `MaxSize`, borderless layout, and information toggle properties
+
+**See:** [Drag and Drop Control](../Controls/Drag%20and%20Drop/) for the complete implementation.
 
 ## Best Practices
 
@@ -622,7 +672,7 @@ The manifest file is the foundation of every K2 custom control. It defines:
 - **Configuration** (`properties` array for custom settings)
 - **Interactions** (`events` array for workflow integration)
 
-After creating your manifest, check out the implementation guides above for details on how to implement the control behavior. The example controls (Arabic Calendar, CAPTCHA Box, Button List) show these concepts in practice.
+After creating your manifest, check out the implementation guides above for details on how to implement the control behavior. The example controls (Arabic Calendar, CAPTCHA Box, Button List, Drag and Drop) show these concepts in practice.
 
 **Next Steps:**
 1. Review the example controls in the `Controls/` folder

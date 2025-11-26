@@ -1,3 +1,6 @@
+if (!window.__captchaRuntimeLoaded) {
+  window.__captchaRuntimeLoaded = true;
+
 /**
  * CAPTCHA Box - Runtime Implementation
  * 
@@ -26,6 +29,40 @@
 
 // K2 safe helpers - Ensure K2 namespace exists for property change events
 if (typeof window.K2 === "undefined") window.K2 = {};
+
+const CAPTCHA_DEFAULT_HEIGHT = '200px';
+const CAPTCHA_MIN_CONTROL_HEIGHT = 180; // px
+const CAPTCHA_MIN_CONTROL_HEIGHT_PX = `${CAPTCHA_MIN_CONTROL_HEIGHT}px`;
+
+function clampHeightValue(value) {
+  if (value === undefined || value === null) {
+    return CAPTCHA_MIN_CONTROL_HEIGHT_PX;
+  }
+
+  const trimmed = String(value).trim();
+  const lowered = trimmed.toLowerCase();
+
+  if (
+    !trimmed ||
+    lowered === 'auto' ||
+    lowered === 'initial' ||
+    lowered === 'inherit' ||
+    lowered.includes('%') ||
+    lowered.startsWith('calc(')
+  ) {
+    return trimmed;
+  }
+
+  const pxMatch = trimmed.match(/(-?\d*\.?\d+)\s*px/i);
+  if (pxMatch) {
+    const numericValue = parseFloat(pxMatch[1]);
+    if (!Number.isNaN(numericValue) && numericValue < CAPTCHA_MIN_CONTROL_HEIGHT) {
+      return CAPTCHA_MIN_CONTROL_HEIGHT_PX;
+    }
+  }
+
+  return trimmed;
+}
 
 // Simple Localization System for CAPTCHA Box (Runtime)
 const CAPTCHA_STRINGS = {
@@ -389,7 +426,7 @@ function generateRuntimeTemplate(culture = null, customPlaceholder = null) {
               <div class="loading-text">${captchaGetLocalizedString('loadingCaptcha', currentCulture)}</div>
             </div>
             <div class="captcha-error" style="display: none;">
-              <div class="error-icon">⚠️</div>
+              <div class="error-icon" aria-hidden="true">!</div>
               <div class="error-text">${captchaGetLocalizedString('captchaError', currentCulture)}</div>
             </div>
           </div>
@@ -432,7 +469,7 @@ if (!window.customElements.get('captcha-control')) {
   _autoRefresh = "true";
   _theme = "light";
   _width = "300px";
-  _height = "auto";
+  _height = CAPTCHA_DEFAULT_HEIGHT;
   _enabled = "true";
   _readOnly = "false";
   _tooltip = "";
@@ -600,7 +637,15 @@ if (!window.customElements.get('captcha-control')) {
 
   get Height() { return this._height; }
   set Height(val) {
-    this._height = val || "auto";
+    const normalized = (val === undefined || val === null || val === '') ? CAPTCHA_DEFAULT_HEIGHT : String(val);
+    this._height = clampHeightValue(normalized);
+    if (this._height && this._height !== 'auto') {
+      this.style.height = this._height;
+    } else if (this._height === 'auto') {
+      this.style.height = 'auto';
+    } else {
+      this.style.removeProperty('height');
+    }
     if (this._hasRendered) this.updateDimensions();
     safeRaisePropertyChanged(this, 'Height');
   }
@@ -668,6 +713,8 @@ if (!window.customElements.get('captcha-control')) {
     super(); 
     this._culture = captchaDetectBrowserCulture();
     this._provider = createCaptchaProvider(this._captchaProvider, this._apiEndpoint, this._apiKey);
+    this._resizeObserver = null;
+    this._styleObserver = null;
   }
 
   connectedCallback() { 
@@ -687,6 +734,7 @@ if (!window.customElements.get('captcha-control')) {
       attributes: true,
       attributeFilter: ['style']
     });
+    this.setupResizeObserver();
     
     // Also check dimensions after a short delay to catch initial styles
     setTimeout(() => {
@@ -704,6 +752,12 @@ if (!window.customElements.get('captcha-control')) {
     
     if (this._styleObserver) {
       this._styleObserver.disconnect();
+      this._styleObserver = null;
+    }
+    
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
     }
   }
 
@@ -746,6 +800,7 @@ if (!window.customElements.get('captcha-control')) {
     this.loadCaptcha();
 
     this._hasRendered = true;
+    this.setupResizeObserver();
     this.dispatchEvent(new Event('Rendered'));
   }
 
@@ -946,7 +1001,7 @@ if (!window.customElements.get('captcha-control')) {
     this.showMessage(successMsg, 'success');
     
     // Change button to show success state
-    this.verifyBtn.textContent = '✓ Verified';
+    this.verifyBtn.textContent = 'Verified';
     this.verifyBtn.classList.add('verified');
     this.verifyBtn.disabled = true;
   }
@@ -987,23 +1042,34 @@ if (!window.customElements.get('captcha-control')) {
   updateDimensions() {
     if (!this._hasRendered) return;
     
-    // Check if K2/Dojo has set inline styles (preferred method)
-    const inlineHeight = this.style.height || window.getComputedStyle(this).height;
-    const inlineWidth = this.style.width || window.getComputedStyle(this).width;
-    
-    // Use property values as fallback if no inline styles
+    const computedStyle = window.getComputedStyle(this);
+    const inlineWidth = this.style.width || computedStyle.width;
     const width = inlineWidth || this._width || "300px";
-    const height = inlineHeight || this._height || "auto";
+    
+    // Determine desired height (property > inline > fallback)
+    let desiredHeight = this._height && this._height.trim() ? this._height : '';
+    if (!desiredHeight && this.style.height) {
+      desiredHeight = clampHeightValue(this.style.height);
+    }
+    if (!desiredHeight && computedStyle.height && computedStyle.height !== '0px') {
+      desiredHeight = clampHeightValue(computedStyle.height);
+    }
+    const height = clampHeightValue(desiredHeight || CAPTCHA_DEFAULT_HEIGHT);
+    const minHeightValue = CAPTCHA_MIN_CONTROL_HEIGHT_PX;
     
     // Apply width if not already set via inline style
     if (!this.style.width) {
       this.style.width = width;
     }
     
-    // Apply height if not already set via inline style
-    if (!this.style.height) {
+    if (height === 'auto') {
+      this.style.height = 'auto';
+    } else if (!this.style.height || this.style.height !== height) {
       this.style.height = height;
     }
+
+    this.style.minHeight = minHeightValue;
+    this.style.setProperty('--captcha-min-height', minHeightValue);
     
     // Check if we have an explicit height (not auto)
     const hasExplicitHeight = height && height !== 'auto' && height !== '0px' && height !== 'none';
@@ -1016,7 +1082,22 @@ if (!window.customElements.get('captcha-control')) {
         this.root.style.height = "auto";
         this.root.classList.remove('has-explicit-height');
       }
+      this.root.style.minHeight = minHeightValue;
+      this.root.style.setProperty('--captcha-min-height', minHeightValue);
     }
+  }
+
+  setupResizeObserver() {
+    if (typeof ResizeObserver === 'undefined') return;
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+    }
+    this._resizeObserver = new ResizeObserver(() => {
+      if (this._hasRendered) {
+        this.updateDimensions();
+      }
+    });
+    this._resizeObserver.observe(this);
   }
 
   updateTheme() {
@@ -1111,7 +1192,7 @@ if (!window.customElements.get('captcha-control')) {
       case 'AutoRefresh': return this._autoRefresh;
       case 'Theme': return this._theme || "light";
       case 'Width': return this._width || "300px";
-      case 'Height': return this._height || "auto";
+      case 'Height': return this._height || CAPTCHA_DEFAULT_HEIGHT;
       case 'Enabled': return this._enabled || "true";
       case 'ReadOnly': return this._readOnly || "false";
       case 'Tooltip': return this._tooltip || "";
@@ -1166,4 +1247,4 @@ if (!window.customElements.get('captcha-control')) {
 });
 }
 
-
+}

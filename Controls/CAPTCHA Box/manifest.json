@@ -30,26 +30,32 @@
   "events": [
     {
       "id": "Changed",
+      "displayname": "Changed",
       "description": "Fires when the CAPTCHA input value changes"
     },
     {
       "id": "Focus",
+      "displayname": "Focus",
       "description": "Fires when the control receives focus"
     },
     {
       "id": "Blur",
+      "displayname": "Blur",
       "description": "Fires when the control loses focus"
     },
     {
       "id": "OnEnter",
+      "displayname": "Enter",
       "description": "Fires when Enter key is pressed"
     },
     {
       "id": "Verified",
+      "displayname": "Verified",
       "description": "Fires when CAPTCHA verification succeeds"
     },
     {
       "id": "VerificationFailed",
+      "displayname": "Verification Failed",
       "description": "Fires when CAPTCHA verification fails"
     }
   ],
@@ -145,9 +151,12 @@
     {
       "id": "Theme",
       "refreshdisplay": "true",
-      "friendlyname": "Theme",
-      "type": "string",
-      "inputlength": "20",
+      "friendlyname": "Color Mode",
+      "type": "drop",
+      "dropitems": [
+        {"value": "light", "text": "Light"},
+        {"value": "dark", "text": "Dark"}
+      ],
       "initialvalue": "light",
       "changesdisplay": true
     },
@@ -157,6 +166,15 @@
       "friendlyname": "Read-Only",
       "type": "bool",
       "initialvalue": "false",
+      "changesdisplay": true
+    },
+    {
+      "id": "Height",
+      "friendlyname": "Height",
+      "type": "text",
+      "refreshdisplay": "true",
+      "inputlength": "50",
+      "initialvalue": "200px",
       "changesdisplay": true
     }
   ]

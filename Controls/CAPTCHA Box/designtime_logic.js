@@ -23,8 +23,52 @@
  * @version 1.0.0
  */
 
+(function initCaptchaDesignTimeScript(globalScope) {
+if (!globalScope) {
+  return;
+}
+if (globalScope.__CAPTCHA_DESIGNTIME_INITIALIZED__) {
+  console.debug("CAPTCHA design-time script already initialized; skipping duplicate load.");
+  return;
+}
+globalScope.__CAPTCHA_DESIGNTIME_INITIALIZED__ = true;
+
 // K2 safe helpers - Ensure K2 namespace exists for property change events
 if (typeof window.K2 === "undefined") window.K2 = {};
+
+const CAPTCHA_DEFAULT_HEIGHT = '200px';
+const CAPTCHA_MIN_CONTROL_HEIGHT = 180; // px
+const CAPTCHA_MIN_CONTROL_HEIGHT_PX = `${CAPTCHA_MIN_CONTROL_HEIGHT}px`;
+
+function clampHeightValue(value) {
+  if (value === undefined || value === null) {
+    return CAPTCHA_MIN_CONTROL_HEIGHT_PX;
+  }
+  
+  const trimmed = String(value).trim();
+  const lowered = trimmed.toLowerCase();
+  
+  if (
+    !trimmed ||
+    lowered === 'auto' ||
+    lowered === 'initial' ||
+    lowered === 'inherit' ||
+    lowered.includes('%') ||
+    lowered.startsWith('calc(')
+  ) {
+    return trimmed;
+  }
+  
+  const pxMatch = trimmed.match(/(-?\d*\.?\d+)\s*px/i);
+  if (pxMatch) {
+    const numericValue = parseFloat(pxMatch[1]);
+    if (!Number.isNaN(numericValue) && numericValue < CAPTCHA_MIN_CONTROL_HEIGHT) {
+      return CAPTCHA_MIN_CONTROL_HEIGHT_PX;
+    }
+  }
+  
+  return trimmed;
+}
 
 // Simple Localization System for CAPTCHA Box (Design-time)
 const CAPTCHA_STRINGS = {
@@ -218,7 +262,7 @@ if (!window.customElements.get('captcha-control')) {
   _autoRefresh = "true";
   _theme = "light";
   _width = "300px";
-  _height = "auto";
+  _height = CAPTCHA_DEFAULT_HEIGHT;
   _enabled = "true";
   _readOnly = "false";
   _tooltip = "";
@@ -345,7 +389,8 @@ if (!window.customElements.get('captcha-control')) {
 
   get Height() { return this._height; }
   set Height(val) {
-    this._height = val || "auto";
+    const normalized = (val === undefined || val === null || val === '') ? CAPTCHA_DEFAULT_HEIGHT : String(val);
+    this._height = clampHeightValue(normalized);
     if (this._hasRendered) this.updateDimensions();
   }
 
@@ -405,7 +450,15 @@ if (!window.customElements.get('captcha-control')) {
   constructor() { super(); }
 
   connectedCallback() { 
+    // Attach Shadow DOM
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: 'open' });
+    }
+    
     this.render();
+    
+    // Find the K2 wrapper container
+    this._findContainer();
     
     // Observe style attribute changes from K2/Dojo
     this._styleObserver = new MutationObserver(() => {
@@ -422,6 +475,22 @@ if (!window.customElements.get('captcha-control')) {
       attributeFilter: ['style']
     });
     
+    // Also observe the container if found
+    if (this._container) {
+      this._containerObserver = new MutationObserver(() => {
+        if (this._hasRendered) {
+          setTimeout(() => {
+            this.updateDimensions();
+          }, 0);
+        }
+      });
+      
+      this._containerObserver.observe(this._container, {
+        attributes: true,
+        attributeFilter: ['style']
+      });
+    }
+    
     // Also check dimensions after a short delay to catch initial styles
     setTimeout(() => {
       if (this._hasRendered) {
@@ -434,22 +503,623 @@ if (!window.customElements.get('captcha-control')) {
     if (this._styleObserver) {
       this._styleObserver.disconnect();
     }
+    if (this._containerObserver) {
+      this._containerObserver.disconnect();
+    }
+  }
+  
+  _findContainer() {
+    let container = this.parentElement;
+    while (container && !container.classList.contains('controlwrapper') && !container.classList.contains('resizewrapper')) {
+      container = container.parentElement;
+    }
+    this._container = container;
+    return container;
   }
 
   render() {
-    if (this._hasRendered) return;
+    if (this._hasRendered || !this.shadowRoot) return;
     
     // Detect browser culture
     this._culture = captchaDetectBrowserCulture();
+    const isRTL = captchaIsRTLLanguage(this._culture);
     
-    // Generate localized template with custom placeholder
-    this.innerHTML = captchaGenerateDesignTemplate(this._culture, this._placeholder);
+    // Use custom placeholder if provided, otherwise use localized default
+    const placeholder = this._placeholder && this._placeholder.trim() 
+      ? this._placeholder.trim() 
+      : captchaGetLocalizedString('placeholder', this._culture);
+    
+    // Add dir attribute and RTL class for RTL languages
+    const dirAttr = isRTL ? 'dir="rtl"' : 'dir="ltr"';
+    const rtlClass = isRTL ? 'rtl' : '';
+    
+    // Generate HTML template
+    const htmlTemplate = `
+      <div class="k2-captcha-control ${rtlClass}" ${dirAttr}>
+        <div class="captcha-container">
+          <div class="captcha-image-container">
+            <div class="captcha-image-preview">
+              <div class="captcha-preview-text">${captchaGetLocalizedString('designTimeCaptcha', this._culture)}</div>
+              <div class="captcha-preview-overlay">
+                <div class="captcha-preview-info">
+                  ${captchaGetLocalizedString('designTimeInfo', this._culture)
+                    .replace('{provider}', '<span class="preview-provider">OpenCaptcha</span>')
+                    .replace('{theme}', '<span class="preview-theme">Light</span>')
+                    .replace('{size}', '<span class="preview-size">300px</span>')}
+                </div>
+              </div>
+            </div>
+            <button class="captcha-refresh-btn" type="button" title="${captchaGetLocalizedString('refreshButton', this._culture)}" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="m3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </button>
+          </div>
 
-    // Grab refs
-    this.root = this.querySelector('.k2-captcha-control');
-    this.captchaInput = this.querySelector('.captcha-input');
-    this.refreshBtn = this.querySelector('.captcha-refresh-btn');
-    this.verifyBtn = this.querySelector('.captcha-verify-btn');
+          <div class="captcha-input-container">
+            <input type="text" class="captcha-input" placeholder="${placeholder}" disabled />
+            <button class="captcha-verify-btn" type="button" disabled>
+              ${captchaGetLocalizedString('verifyButton', this._culture)}
+            </button>
+          </div>
+
+          <div class="captcha-status">
+            <div class="captcha-message" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Generate complete Shadow DOM with styles
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          width: 100%;
+          height: 100%;
+          box-sizing: border-box;
+          min-width: 0;
+          --captcha-min-height: 180px;
+          min-height: var(--captcha-min-height, 180px);
+        }
+
+        .k2-captcha-control {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          font-size: 14px;
+          line-height: 1.4;
+          color: #333;
+          background: #fff;
+          border: 1px solid #e1e5e9;
+          border-radius: 8px;
+          padding: 16px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          transition: all 0.2s ease;
+          position: relative;
+          overflow: hidden;
+          width: 100%;
+          height: 100%;
+          box-sizing: border-box;
+          min-height: var(--captcha-min-height, 180px);
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        .k2-captcha-control:hover {
+          border-color: #007acc;
+          box-shadow: 0 4px 8px rgba(0, 122, 204, 0.15);
+        }
+
+        .captcha-container {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          height: 100%;
+          min-height: fit-content;
+        }
+
+        .k2-captcha-control:not(.has-explicit-height) .captcha-container,
+        .k2-captcha-control[style*="height: auto"] .captcha-container {
+          height: auto;
+        }
+
+        .captcha-image-container {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          flex: 0 1 auto;
+          min-height: 80px;
+          align-self: stretch;
+        }
+
+        .k2-captcha-control:not(.has-explicit-height) .captcha-image-container,
+        .k2-captcha-control[style*="height: auto"] .captcha-image-container {
+          margin-bottom: 0;
+        }
+
+        .k2-captcha-control.has-explicit-height .captcha-image-container,
+        .k2-captcha-control[style*="height"]:not([style*="height: auto"]) .captcha-image-container {
+          flex: 1 1 0;
+        }
+
+        .captcha-image-preview {
+          flex: 1;
+          min-height: 0;
+          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+          border: 2px dashed #dee2e6;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .k2-captcha-control.has-explicit-height .captcha-image-preview,
+        .k2-captcha-control[style*="height"]:not([style*="height: auto"]) .captcha-image-preview {
+          height: 100%;
+          min-height: 80px;
+        }
+
+        .captcha-preview-text {
+          font-size: 12px;
+          color: #6c757d;
+          text-align: center;
+          padding: 16px;
+          font-weight: 500;
+        }
+
+        .captcha-preview-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(255, 255, 255, 0.9);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+
+        .captcha-image-preview:hover .captcha-preview-overlay {
+          opacity: 1;
+        }
+
+        .captcha-preview-info {
+          font-size: 10px;
+          color: #495057;
+          text-align: center;
+          line-height: 1.3;
+        }
+
+        .captcha-preview-info .preview-provider,
+        .captcha-preview-info .preview-theme,
+        .captcha-preview-info .preview-size {
+          font-weight: 600;
+          color: #007acc;
+        }
+
+        .captcha-refresh-btn {
+          background: #f8f9fa;
+          border: 1px solid #dee2e6;
+          border-radius: 4px;
+          padding: 8px;
+          cursor: not-allowed;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+          opacity: 0.6;
+        }
+
+        .captcha-refresh-btn:hover {
+          background: #e9ecef;
+          border-color: #adb5bd;
+        }
+
+        .captcha-refresh-btn svg {
+          width: 16px;
+          height: 16px;
+          color: #6c757d;
+        }
+
+        .captcha-input-container {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          flex-shrink: 0;
+          flex-grow: 0;
+          margin-top: auto;
+          min-height: 44px;
+        }
+
+        .k2-captcha-control:not(.has-explicit-height) .captcha-input-container,
+        .k2-captcha-control[style*="height: auto"] .captcha-input-container {
+          margin-top: 0;
+        }
+
+        .captcha-input {
+          flex: 1;
+          padding: 8px 12px;
+          border: 1px solid #dee2e6;
+          border-radius: 4px;
+          font-size: 14px;
+          background: #f8f9fa;
+          color: #6c757d;
+          cursor: not-allowed;
+        }
+
+        .captcha-input:focus {
+          outline: none;
+          border-color: #007acc;
+          box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+        }
+
+        .captcha-verify-btn {
+          background: #6c757d;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 8px 16px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: not-allowed;
+          opacity: 0.6;
+          transition: all 0.2s ease;
+        }
+
+        .captcha-verify-btn:hover {
+          background: #5a6268;
+        }
+
+        .captcha-verify-btn.verified {
+          background: #28a745 !important;
+          color: white;
+          cursor: default;
+          transform: none;
+          box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+        }
+
+        .captcha-verify-btn.verified:hover {
+          background: #28a745 !important;
+          transform: none;
+          box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+        }
+
+        .captcha-status {
+          flex-shrink: 0;
+        }
+
+        .captcha-message {
+          padding: 8px 12px;
+          border-radius: 4px;
+          font-size: 13px;
+          font-weight: 500;
+          text-align: center;
+          transition: all 0.3s ease;
+          animation: slideIn 0.3s ease-out;
+        }
+
+        .captcha-message.success {
+          background: #d4edda;
+          color: #155724;
+          border: 2px solid #28a745;
+          font-weight: 600;
+          animation: successPulse 0.5s ease-out;
+        }
+
+        .captcha-message.error {
+          background: #f8d7da;
+          color: #721c24;
+          border: 2px solid #dc3545;
+          font-weight: 600;
+          animation: errorShake 0.5s ease-out;
+        }
+
+        .captcha-message.info {
+          background: #d1ecf1;
+          color: #0c5460;
+          border: 1px solid #bee5eb;
+        }
+
+        @keyframes successPulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.02); }
+          100% { transform: scale(1); }
+        }
+
+        @keyframes errorShake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .k2-captcha-control.theme-dark {
+          background: #2c3e50;
+          border-color: #34495e;
+          color: #ecf0f1;
+        }
+
+        .k2-captcha-control.theme-dark:hover {
+          border-color: #3498db;
+          box-shadow: 0 4px 8px rgba(52, 152, 219, 0.15);
+        }
+
+        .k2-captcha-control.theme-dark .captcha-image-preview {
+          background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+          border-color: #4a5f7a;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-preview-text {
+          color: #bdc3c7;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-preview-overlay {
+          background: rgba(44, 62, 80, 0.9);
+        }
+
+        .k2-captcha-control.theme-dark .captcha-preview-info {
+          color: #ecf0f1;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-preview-info .preview-provider,
+        .k2-captcha-control.theme-dark .captcha-preview-info .preview-theme,
+        .k2-captcha-control.theme-dark .captcha-preview-info .preview-size {
+          color: #3498db;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-refresh-btn {
+          background: #34495e;
+          border-color: #4a5f7a;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-refresh-btn:hover {
+          background: #4a5f7a;
+          border-color: #5d6d7e;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-refresh-btn svg {
+          color: #bdc3c7;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-input {
+          background: #34495e;
+          border-color: #4a5f7a;
+          color: #bdc3c7;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-input:focus {
+          border-color: #3498db;
+          box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .k2-captcha-control.theme-dark .captcha-verify-btn {
+          background: #7f8c8d;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-verify-btn:hover {
+          background: #6c757d;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-message.success {
+          background: #1e3a1e;
+          color: #90ee90;
+          border-color: #2d5a2d;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-message.error {
+          background: #3a1e1e;
+          color: #ff6b6b;
+          border-color: #5a2d2d;
+        }
+
+        .k2-captcha-control.theme-dark .captcha-message.info {
+          background: #1e2a3a;
+          color: #87ceeb;
+          border-color: #2d3a5a;
+        }
+
+        .k2-captcha-control.is-disabled,
+        .k2-captcha-control.disabled {
+          position: relative;
+          opacity: 0.6;
+          pointer-events: none;
+          cursor: not-allowed;
+        }
+
+        .k2-captcha-control.is-disabled::after,
+        .k2-captcha-control.disabled::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(255, 255, 255, 0.5);
+          pointer-events: none;
+          border-radius: 8px;
+        }
+
+        .k2-captcha-control.is-disabled .captcha-input,
+        .k2-captcha-control.is-disabled .captcha-verify-btn,
+        .k2-captcha-control.is-disabled .captcha-refresh-btn,
+        .k2-captcha-control.disabled .captcha-input,
+        .k2-captcha-control.disabled .captcha-verify-btn,
+        .k2-captcha-control.disabled .captcha-refresh-btn {
+          cursor: not-allowed;
+        }
+
+        .k2-captcha-control.is-readonly,
+        .k2-captcha-control.read-only {
+          position: relative;
+        }
+
+        .k2-captcha-control.is-readonly::before,
+        .k2-captcha-control.read-only::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(248, 249, 250, 0.8);
+          pointer-events: none;
+          border-radius: 8px;
+        }
+
+        .k2-captcha-control.is-readonly .captcha-input,
+        .k2-captcha-control.read-only .captcha-input {
+          background: #f8f9fa;
+          cursor: not-allowed;
+          color: #6c757d;
+        }
+
+        .k2-captcha-control.is-readonly .captcha-verify-btn,
+        .k2-captcha-control.is-readonly .captcha-refresh-btn,
+        .k2-captcha-control.read-only .captcha-verify-btn,
+        .k2-captcha-control.read-only .captcha-refresh-btn {
+          display: none;
+        }
+
+        .k2-captcha-control:focus-within {
+          outline: 2px solid #007acc;
+          outline-offset: 2px;
+        }
+
+        .captcha-refresh-btn:focus,
+        .captcha-verify-btn:focus,
+        .captcha-input:focus {
+          outline: 2px solid #007acc;
+          outline-offset: 1px;
+        }
+
+        .k2-captcha-control.rtl {
+          direction: rtl;
+          text-align: right;
+        }
+
+        .k2-captcha-control.rtl .captcha-image-container {
+          flex-direction: row-reverse !important;
+          direction: ltr !important;
+        }
+
+        .k2-captcha-control.rtl .captcha-input-container {
+          flex-direction: row-reverse !important;
+          direction: ltr !important;
+        }
+
+        .k2-captcha-control.rtl .captcha-input {
+          direction: rtl;
+          text-align: right;
+        }
+
+        .k2-captcha-control.rtl .captcha-preview-text,
+        .k2-captcha-control.rtl .captcha-preview-info,
+        .k2-captcha-control.rtl .captcha-message {
+          text-align: center;
+          direction: rtl;
+        }
+
+        @media (max-width: 480px) {
+          .k2-captcha-control {
+            padding: 12px;
+          }
+          
+          .k2-captcha-control:not(.rtl) .captcha-image-container {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          
+          .k2-captcha-control:not(.rtl) .captcha-refresh-btn {
+            align-self: flex-start;
+            width: fit-content;
+          }
+          
+          .k2-captcha-control:not(.rtl) .captcha-input-container {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          
+          .captcha-verify-btn {
+            width: 100%;
+          }
+
+          .k2-captcha-control.rtl .captcha-image-container {
+            flex-direction: column;
+          }
+          
+          .k2-captcha-control.rtl .captcha-refresh-btn {
+            align-self: flex-end;
+          }
+          
+          .k2-captcha-control.rtl .captcha-input-container {
+            flex-direction: column;
+          }
+        }
+
+        @media (prefers-contrast: high) {
+          .k2-captcha-control {
+            border-width: 2px;
+          }
+          
+          .captcha-input,
+          .captcha-verify-btn,
+          .captcha-refresh-btn {
+            border-width: 2px;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .k2-captcha-control,
+          .captcha-refresh-btn,
+          .captcha-verify-btn,
+          .captcha-input,
+          .captcha-message {
+            transition: none;
+            animation: none;
+          }
+        }
+
+        @media print {
+          .k2-captcha-control {
+            border: 1px solid #000;
+            box-shadow: none;
+            background: #fff;
+            color: #000;
+          }
+          
+          .captcha-refresh-btn,
+          .captcha-verify-btn {
+            display: none;
+          }
+        }
+      </style>
+      ${htmlTemplate}
+    `;
+
+    // Grab refs from shadow DOM
+    this.root = this.shadowRoot.querySelector('.k2-captcha-control');
+    this.captchaInput = this.shadowRoot.querySelector('.captcha-input');
+    this.refreshBtn = this.shadowRoot.querySelector('.captcha-refresh-btn');
+    this.verifyBtn = this.shadowRoot.querySelector('.captcha-verify-btn');
 
     // Apply props to UI
     this.Placeholder = this._placeholder;
@@ -498,26 +1168,41 @@ if (!window.customElements.get('captcha-control')) {
   updateDimensions() {
     if (!this._hasRendered) return;
     
-    // Check if K2/Dojo has set inline styles (preferred method)
-    const inlineHeight = this.style.height || window.getComputedStyle(this).height;
-    const inlineWidth = this.style.width || window.getComputedStyle(this).width;
-    
-    // Use property values as fallback if no inline styles
-    const width = inlineWidth || this._width || "300px";
-    const height = inlineHeight || this._height || "auto";
-    
-    // Apply width if not already set via inline style
-    if (!this.style.width) {
-      this.style.width = width;
+    // Find container if not already found
+    if (!this._container) {
+      this._findContainer();
     }
     
-    // Apply height if not already set via inline style
-    if (!this.style.height) {
-      this.style.height = height;
+    // Get dimensions from container if available, otherwise use computed styles
+    let width = "100%";
+    let height = this._height || CAPTCHA_DEFAULT_HEIGHT;
+    
+    if (this._container) {
+      // Check if container has explicit width/height styles
+      const containerStyle = window.getComputedStyle(this._container);
+      const containerWidth = this._container.style.width || containerStyle.width;
+      const containerHeight = this._container.style.height || containerStyle.height;
+      
+      // If container has explicit dimensions, use them
+      if (containerWidth && containerWidth !== 'auto' && containerWidth !== '0px') {
+        width = containerWidth;
+      }
+      if (containerHeight && containerHeight !== 'auto' && containerHeight !== '0px') {
+        height = containerHeight;
+      }
     }
+    
+    height = clampHeightValue(height);
     
     // Check if we have an explicit height (not auto)
-    const hasExplicitHeight = height && height !== 'auto' && height !== '0px' && height !== 'none';
+    const hasExplicitHeight = height && height !== 'auto' && height !== '100%' && height !== '0px' && height !== 'none';
+    
+    // Always set the control to fill its container width and adapt height
+    this.style.width = "100%";
+    this.style.height = hasExplicitHeight ? "100%" : "auto";
+    this.style.boxSizing = "border-box";
+    this.style.minHeight = CAPTCHA_MIN_CONTROL_HEIGHT_PX;
+    this.style.setProperty('--captcha-min-height', CAPTCHA_MIN_CONTROL_HEIGHT_PX);
     
     if (this.root) {
       if (hasExplicitHeight) {
@@ -527,35 +1212,69 @@ if (!window.customElements.get('captcha-control')) {
         this.root.style.height = "auto";
         this.root.classList.remove('has-explicit-height');
       }
+      this.root.style.width = "100%";
+      this.root.style.minHeight = CAPTCHA_MIN_CONTROL_HEIGHT_PX;
+      this.root.style.setProperty('--captcha-min-height', CAPTCHA_MIN_CONTROL_HEIGHT_PX);
     }
     
-    // Update preview info
-    const sizeElement = this.querySelector('.preview-size');
+    // Update preview info with actual dimensions and sync container height so other controls flow correctly
+    const sizeElement = this.shadowRoot?.querySelector('.preview-size');
+    const actualHeight = this.root?.offsetHeight || this.offsetHeight || 0;
     if (sizeElement) {
-      sizeElement.textContent = width;
+      // Use offsetWidth/offsetHeight for actual rendered size
+      const actualWidth = this.offsetWidth || this._container?.offsetWidth || 0;
+      if (actualWidth > 0) {
+        sizeElement.textContent = `${actualWidth}px`;
+      } else {
+        sizeElement.textContent = width;
+      }
+    }
+    
+    if (this._container) {
+      if (hasExplicitHeight) {
+        if (height && this._container.style.height !== height) {
+          this._container.style.height = height;
+        }
+        if (height && this._container.style.minHeight !== height) {
+          this._container.style.minHeight = height;
+        }
+      } else {
+        if (this._container.style.height !== 'auto') {
+          this._container.style.height = 'auto';
+        }
+        const measuredHeight = Math.max(actualHeight || 0, CAPTCHA_MIN_CONTROL_HEIGHT);
+        if (measuredHeight > 0) {
+          const minHeightValue = `${measuredHeight}px`;
+          if (this._container.style.minHeight !== minHeightValue) {
+            this._container.style.minHeight = minHeightValue;
+          }
+        } else if (this._container.style.minHeight) {
+          this._container.style.minHeight = '';
+        }
+      }
     }
   }
 
   updatePreview() {
-    if (!this._hasRendered) return;
+    if (!this._hasRendered || !this.shadowRoot) return;
     
     // Update provider display
-    const providerElement = this.querySelector('.preview-provider');
+    const providerElement = this.shadowRoot.querySelector('.preview-provider');
     if (providerElement) {
       providerElement.textContent = this._captchaProvider || "OpenCaptcha";
     }
     
     // Update theme display
-    const themeElement = this.querySelector('.preview-theme');
+    const themeElement = this.shadowRoot.querySelector('.preview-theme');
     if (themeElement) {
       themeElement.textContent = this._theme || "Light";
     }
     
     // Update verification status display
-    const statusElement = this.querySelector('.captcha-preview-text');
+    const statusElement = this.shadowRoot.querySelector('.captcha-preview-text');
     if (statusElement) {
       if (this._value === "true") {
-        statusElement.textContent = "✓ CAPTCHA Verified";
+        statusElement.textContent = "CAPTCHA Verified";
         statusElement.style.color = "#28a745";
       } else {
         statusElement.textContent = captchaGetLocalizedString('designTimeCaptcha', this._culture);
@@ -613,7 +1332,7 @@ if (!window.customElements.get('captcha-control')) {
   }
 
   updateAccessibility() {
-    if (!this._hasRendered) return;
+    if (!this._hasRendered || !this.shadowRoot || !this.root) return;
     
     // Remove existing accessibility label
     const existingLabel = this.root.querySelector('[id$="_AccessibilityLabel"]');
@@ -660,7 +1379,7 @@ if (!window.customElements.get('captcha-control')) {
       case 'AutoRefresh': return this._autoRefresh;
       case 'Theme': return this._theme || "light";
       case 'Width': return this._width || "300px";
-      case 'Height': return this._height || "auto";
+      case 'Height': return this._height || CAPTCHA_DEFAULT_HEIGHT;
       case 'Enabled': return this._enabled || "true";
       case 'ReadOnly': return this._readOnly || "false";
       case 'Tooltip': return this._tooltip || "";
@@ -782,5 +1501,4 @@ window.addEventListener('resize', () => {
   }, 100);
 });
 
-
-
+})(typeof window !== "undefined" ? window : null);

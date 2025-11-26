@@ -33,7 +33,7 @@ Follow this recommended path to learn custom control development:
 ### 1. Start Here
 Start with the **[Getting Started](./Getting%20Started.md)** guide to understand:
 - What K2 custom controls are
-- The 3 example controls included
+- The 4 example controls included
 - How to register and use controls in K2
 - Basic workflow
 
@@ -63,7 +63,7 @@ Enhance your control with advanced features:
 
 ## Example Controls
 
-The Control Dojo includes three example controls that demonstrate best practices:
+The Control Dojo includes four example controls that demonstrate best practices:
 
 ### 1. Arabic Calendar (`arabic-calendar`)
 - **Features:** RTL support, style-aware theming, date validation
@@ -79,6 +79,11 @@ The Control Dojo includes three example controls that demonstrate best practices
 - **Features:** Data binding, customizable layouts, icon support, methods
 - **See:** [Data Binding](./Data%20Binding.md) | [Triggering Control Methods](./Triggering%20Control%20Methods.md)
 - **Location:** `Controls/Button List/`
+
+### 4. Drag and Drop (`drag-and-drop-control`)
+- **Features:** Accessible drop surface, click-to-browse fallback, automatic file preview, MaxSize enforcement, borderless mode
+- **See:** [Standard Properties](./Standard%20Properties.md) | [Responsive Controls](./Responsive%20Controls.md)
+- **Location:** `Controls/Drag and Drop/`
 
 ## Quick Reference
 
@@ -208,7 +213,7 @@ docs/
 
 ## Tips
 
-- **Study the examples**: The 3 example controls show real-world implementations
+- **Study the examples**: The 4 example controls show real-world implementations
 - **Check the manifest**: Each control's manifest.json shows how things work
 - **Use cross-references**: Guides reference each other for related topics
 - **Test in K2**: Always test your control in K2 Designer after creating it
@@ -226,7 +231,7 @@ docs/
 
 This documentation includes what you need to create custom K2 controls:
 - Guides for all aspects of control development
-- Three example controls that show how things work
+- Four example controls that show how things work
 - A clear learning path from basics to advanced topics
 - Quick reference for common tasks
 

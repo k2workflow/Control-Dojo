@@ -40,12 +40,10 @@ A customizable CAPTCHA box for Control Dojo that provides bot protection using o
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `Width` | String | `"300px"` | Control width |
-| `Height` | String | `"auto"` | Control height |
+| `Height` | String | `"200px"` | Control height. Values below `180px` are automatically clamped to `180px` to keep the image, input, and message area from overlapping. |
 | `IsVisible` | Boolean | `true` | Whether the control is visible |
 | `IsEnabled` | Boolean | `true` | Whether the control is enabled and interactive |
 | `IsReadOnly` | Boolean | `false` | Whether the control is in read-only mode |
-
-**Note**: The control also supports `Tooltip`, `TabIndex`, and `AccessibilityText` properties programmatically via `getProperty`/`setProperty` methods, though these are not defined in the manifest. The `Value` property (friendly name: "Verified") indicates verification status, while `CaptchaResponse` is the value property ID used by K2 for data binding.
 
 ## Events
 
@@ -254,6 +252,11 @@ The control includes comprehensive accessibility features:
 - Standard K2 properties use the `Is` prefix: `IsVisible`, `IsEnabled`, `IsReadOnly`
 - The control also supports `Tooltip`, `TabIndex`, and `AccessibilityText` programmatically via `getProperty`/`setProperty` methods, though these are not in the manifest
 
+### Minimum Height Requirement
+- The visual layout requires at least **180px** of vertical space so the CAPTCHA image, refresh button, input, and status message never overlap.
+- Any height value below 180px (whether set through properties, inline styles, or container constraints) is automatically clamped to 180px at runtime and design-time.
+- When placing the control inside responsive panels, ensure the parent container can grow to at least 180px; otherwise it will expand to satisfy the minimum.
+
 ### Local Development Fallback
 - In local development (localhost, 127.0.0.1, or file:// protocol), the control automatically uses a fallback CAPTCHA generator
 - The fallback CAPTCHA works offline and is case-insensitive for testing purposes
@@ -295,6 +298,7 @@ The control includes comprehensive accessibility features:
 - Console messages like: "Access to fetch at 'https://api.opencaptcha.io/' has been blocked by CORS policy"
 - The control automatically falls back to a built-in CAPTCHA generator
 - The CAPTCHA still functions correctly despite the warnings
+- When hosted inside the K2 runtime shell you may also see the control health panel log similar warnings because the runtime inherits the browser's CORS output. This does not indicate a failure as long as you are using the default OpenCaptcha endpoint.
 
 **Recommended Solution for Production:**
 For production deployments, configure the control to use your own CAPTCHA API endpoint that has CORS enabled:
@@ -309,6 +313,7 @@ This eliminates console warnings and gives you full control over the CAPTCHA ser
 - Host your own OpenCaptcha instance with CORS enabled
 - Use a server-side proxy that adds CORS headers
 - Switch to a commercial CAPTCHA provider (hCaptcha, reCAPTCHA) that supports CORS
+- Supply your organization's CAPTCHA endpoint or proxy when packaging the control so forms deployed to the K2 runtime stay free of CORS noise.
 
 **Local Development Fallback:**
 The control automatically uses a fallback CAPTCHA generator when it detects:

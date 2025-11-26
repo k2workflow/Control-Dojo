@@ -301,6 +301,23 @@ if (!window.customElements.get('arabic-calendar')) {
           opacity: 0.5;
         }
 
+        /* Design-time overlay to indicate non-interactable */
+        .container::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(135deg, rgba(248, 249, 250, 0.3) 0%, rgba(241, 245, 249, 0.2) 100%);
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .input-wrap {
+          position: relative;
+        }
+
       </style>
       ${this._TEMPLATE}
     `;

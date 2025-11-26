@@ -18,8 +18,8 @@
     "DataBinding"
   ],
   "events": [
-    { "id": "OnChanged", "friendlyname": "Changed" },
-    { "id": "OnButtonClick", "friendlyname": "Button Clicked" }
+    { "id": "OnChanged", "displayname": "Changed" },
+    { "id": "OnButtonClick", "displayname": "Clicked" }
   ],
   "properties": [
     {
@@ -29,6 +29,15 @@
       "type": "string",
       "inputlength": "255",
       "initialvalue": null,
+      "changesdisplay": true
+    },
+    {
+      "id": "Height",
+      "refreshdisplay": "true",
+      "friendlyname": "Height",
+      "type": "text",
+      "inputlength": "50",
+      "initialvalue": "55px",
       "changesdisplay": true
     },
     {

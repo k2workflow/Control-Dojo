@@ -18,7 +18,7 @@ Here's the basic workflow:
 
 ## Example Controls Included
 
-The Control Dojo includes three example controls that show how things work in practice:
+The Control Dojo includes four example controls that show how things work in practice:
 
 ### 1. Arabic Calendar (`arabic-calendar`)
 
@@ -67,6 +67,23 @@ A flexible button list control that displays a collection of interactive buttons
 - Methods: clearSelection, selectByValue, selectByIndex, getSelectedItem, getAllItems, refresh
 
 **See:** [Data Binding Guide](./Data%20Binding.md) | [Triggering Control Methods](./Triggering%20Control%20Methods.md)
+
+### 4. Drag and Drop (`drag-and-drop-control`)
+
+A modern drag-and-drop upload surface that replaces the legacy multi-file component while mirroring the standard K2 experience:
+- Large drop target that supports drag, click, and keyboard activation
+- Click-to-browse fallback for browsers without drag support
+- Automatic preview once a file is selected, with optional info-only display
+- Built-in overlays for Disabled and Read Only states
+- Responsive layout via Shadow DOM plus width overrides
+
+**Key Features:**
+- Implements standard properties (Value, Width, Height, IsVisible, IsEnabled, IsReadOnly)
+- Custom properties: Watermark, Accept, Tooltip, MaxSize, ShowInformation, Borderless
+- Events: OnChanged, OnFocus, OnBlur, OnEnter
+- JSON Value payload describing the selected file metadata
+
+**See:** [Standard Properties Guide](./Standard%20Properties.md) | [Responsive Controls](./Responsive%20Controls.md)
 
 ## K2 Documentation Links
 
@@ -185,7 +202,7 @@ The browser console provides additional debugging capabilities like breakpoints,
 ## Summary
 
 Custom controls extend K2's functionality by providing reusable web components. The Control Dojo includes:
-- Three example controls that show how things work
+- Four example controls that show how things work
 - Documentation covering all aspects of control development
 - A clear learning path from basics to advanced topics
 - Links to official K2 documentation for registration and deployment

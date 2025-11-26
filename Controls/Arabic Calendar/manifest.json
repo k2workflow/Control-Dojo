@@ -27,18 +27,22 @@
   "events": [
     {
       "id": "Changed",
+      "displayname": "Changed",
       "description": "Fires when the selected date changes"
     },
     {
       "id": "Focus",
+      "displayname": "Focus",
       "description": "Fires when the control receives focus"
     },
     {
       "id": "Blur",
+      "displayname": "Blur",
       "description": "Fires when the control loses focus"
     },
     {
       "id": "ValidationError",
+      "displayname": "Validation Error",
       "description": "Fires when date validation fails"
     }
   ],

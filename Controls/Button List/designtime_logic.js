@@ -12,9 +12,11 @@ function safeRaisePropertyChanged(ctrl, prop) {
   }
 }
 
-// Designtime-only: simple static preview for the K2 designer canvas
+const BUTTON_LIST_DEFAULT_HEIGHT = '55px';
+
+// Designtime preview: must inherit from K2BaseControl
 if (!window.customElements.get('button-list')) {
-  window.customElements.define('button-list', class ButtonListControl extends HTMLElement {
+  window.customElements.define('button-list', class ButtonListControl extends K2BaseControl {
     // Fields
     _value = "";
     _list = "";
@@ -32,46 +34,86 @@ if (!window.customElements.get('button-list')) {
     _contentAlignment = 'center';
     _iconSpacing = '8px';
     _width = "";
-    _height = "";
+    _height = BUTTON_LIST_DEFAULT_HEIGHT;
     _isVisible = true;
     _isEnabled = true;
     _isReadOnly = false;
-    _hasRendered = false;
-    _isConnected = false;
     _previewItems = [];
+    _listConfig = { partmappings: {} };
+    _dataItems = [];
+    _initialListValue = '[{"display": "Item 1", "value": "1"},{"display": "Item 2","value": "2"}]';
 
     constructor() { 
       super();
+      this._attributeWriteLock = new Set();
+    }
+
+    static get observedAttributes() {
+      const baseAttributes = super.observedAttributes || [];
+      return [
+        ...baseAttributes,
+        'value',
+        'buttonlayout',
+        'buttonsize',
+        'buttonstyle',
+        'buttonheight',
+        'buttonwidth',
+        'buttonradius',
+        'buttonspacing',
+        'iconposition',
+        'imagesize',
+        'imagefit',
+        'contentalignment',
+        'iconspacing',
+        'width',
+        'height',
+        'isvisible',
+        'isenabled',
+        'isreadonly'
+      ];
     }
 
     connectedCallback() {
-      this._isConnected = true;
-      
-      // Read buttonstyle attribute if it exists (set by dojo as lowercase of ButtonStyle)
+      // Designer never executes SmartObject calls, so ensure fallback items exist before render
+      this._ensureFallbackPreview();
+
       const buttonStyleAttr = this.getAttribute('buttonstyle');
       if (buttonStyleAttr !== null && buttonStyleAttr !== this._buttonStyle) {
         this._buttonStyle = buttonStyleAttr;
       }
-      
-      if (!this.shadowRoot) {
-        this.attachShadow({ mode: 'open' });
-      }
-      this.render();
+
+      super.connectedCallback();
     }
 
     disconnectedCallback() {
-      // No cleanup needed for designtime
+      super.disconnectedCallback();
     }
 
-    //K2 List API Method - called for listdata properties
-    //Called at design time with initialvalue data
+    // K2 List API method - keep config in sync with runtime surface
+    listConfigChangedCallback(config) {
+      this._listConfig = config || { partmappings: {} };
+      if (Array.isArray(this._dataItems) && this._dataItems.length > 0) {
+        this._previewItems = this._mapItems(this._dataItems);
+        this._refreshPreview();
+      }
+    }
+
+    // K2 List API Method - called at design time with initial value data
     listItemsChangedCallback(itemsChangedEventArgs) {
-      if (Array.isArray(itemsChangedEventArgs?.NewItems)) {
-        // Convert items array to JSON string for the List property
-        const jsonString = JSON.stringify(itemsChangedEventArgs.NewItems);
-        this.List = jsonString;
+      if (Array.isArray(itemsChangedEventArgs?.NewItems) && itemsChangedEventArgs.NewItems.length > 0) {
+        this._dataItems = itemsChangedEventArgs.NewItems;
+        this._previewItems = this._mapItems(this._dataItems);
+
+        // Persist string version so the List property mirrors runtime
+        try {
+          this._list = JSON.stringify(itemsChangedEventArgs.NewItems);
+        } catch (err) {
+          console.warn('[Button List DESIGNTIME] Failed to serialize list items', err);
+        }
+        this._refreshPreview();
       } else {
-        console.warn('[Button List DESIGNTIME] NewItems is not an array');
+        console.warn('[Button List DESIGNTIME] NewItems is empty - falling back to static list');
+        this._useFallbackPreview();
       }
     }
 
@@ -133,7 +175,7 @@ if (!window.customElements.get('button-list')) {
         this._buttonStyle = String(val);
       }
       // The dojo will set this as 'buttonstyle' attribute (lowercase of ButtonStyle)
-      this.setAttribute('buttonstyle', this._buttonStyle);
+      this._setAttributeSilently('buttonstyle', this._buttonStyle);
       if (this._hasRendered) {
         this._updatePreview();
       }
@@ -242,9 +284,10 @@ if (!window.customElements.get('button-list')) {
 
     get Height() { return this._height; }
     set Height(val) {
-      this._height = val;
+      const normalized = (val === undefined || val === null || val === '') ? BUTTON_LIST_DEFAULT_HEIGHT : String(val);
+      this._height = normalized;
       if (this._hasRendered && this.container) {
-        const v = (val === undefined || val === null || val === '') ? '' : (isNaN(val) ? String(val) : `${val}px`);
+        const v = (normalized === undefined || normalized === null || normalized === '') ? '' : (isNaN(normalized) ? String(normalized) : `${normalized}px`);
         this.container.style.height = v;
       }
       safeRaisePropertyChanged(this, 'Height');
@@ -272,11 +315,76 @@ if (!window.customElements.get('button-list')) {
     set IsReadOnly(val) {
       // Explicitly default to false if not explicitly set to true
       this._isReadOnly = val === 'true' || val === true;
-      this.setAttribute('isreadonly', this._isReadOnly ? 'true' : 'false');
+      this._setAttributeSilently('isreadonly', this._isReadOnly ? 'true' : 'false');
       if (this._hasRendered && this.container) {
         this.container.classList.toggle('is-readonly', this._isReadOnly);
       }
       safeRaisePropertyChanged(this, 'IsReadOnly');
+    }
+
+    onAttributeChanged(name, oldValue, newValue) {
+      if (this._attributeWriteLock && this._attributeWriteLock.has(name)) {
+        return;
+      }
+      switch (name) {
+        case 'value':
+          this.Value = newValue;
+          break;
+        case 'buttonlayout':
+          this.ButtonLayout = newValue;
+          break;
+        case 'buttonsize':
+          this.ButtonSize = newValue;
+          break;
+        case 'buttonstyle':
+          this.ButtonStyle = newValue;
+          break;
+        case 'buttonheight':
+          this.ButtonHeight = newValue;
+          break;
+        case 'buttonwidth':
+          this.ButtonWidth = newValue;
+          break;
+        case 'buttonradius':
+          this.ButtonRadius = newValue;
+          break;
+        case 'buttonspacing':
+          this.ButtonSpacing = newValue;
+          break;
+        case 'iconposition':
+          this.IconPosition = newValue;
+          break;
+        case 'imagesize':
+          this.ImageSize = newValue;
+          break;
+        case 'imagefit':
+          this.ImageFit = newValue;
+          break;
+        case 'contentalignment':
+          this.ContentAlignment = newValue;
+          break;
+        case 'iconspacing':
+          this.IconSpacing = newValue;
+          break;
+        case 'width':
+          this.Width = newValue;
+          break;
+        case 'height':
+          this.Height = newValue;
+          break;
+        case 'isvisible':
+          this.IsVisible = newValue;
+          break;
+        case 'isenabled':
+          this.IsEnabled = newValue;
+          break;
+        case 'isreadonly':
+          this.IsReadOnly = newValue;
+          break;
+        default:
+          super.onAttributeChanged(name, oldValue, newValue);
+          break;
+      }
     }
 
     // Parse static list data from initialvalue (JSON array)
@@ -286,16 +394,10 @@ if (!window.customElements.get('button-list')) {
         return;
       }
 
-      try {
-        const parsed = JSON.parse(this._list);
-        if (Array.isArray(parsed)) {
-          this._previewItems = parsed;
-        } else {
-          console.warn('[Button List DESIGNTIME] Parsed JSON is not an array');
-        }
-      } catch (e) {
-        console.error('[Button List DESIGNTIME] JSON parse error:', e);
-        console.error('[Button List DESIGNTIME] Invalid JSON string:', this._list);
+      const parsed = this._tryParseListString(this._list);
+      if (parsed.length > 0) {
+        this._dataItems = parsed;
+        this._previewItems = this._mapItems(parsed);
       }
     }
 
@@ -373,16 +475,14 @@ if (!window.customElements.get('button-list')) {
       });
     }
 
-    render() {
-      if (this._hasRendered) {
+    _render() {
+      if (!this._shadow) {
         return;
       }
 
-      // Parse initial list data
-      this._parseStaticList();
+      this._ensureFallbackPreview();
 
-      // Render with Shadow DOM
-      this.shadowRoot.innerHTML = `
+      this._shadow.innerHTML = `
         <style>
           :host {
             display: block;
@@ -454,6 +554,8 @@ if (!window.customElements.get('button-list')) {
             box-sizing: border-box;
             pointer-events: none;
             flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
           }
           .button-item.button-style-normal {
             background: var(--button-background-color, #949494);
@@ -530,6 +632,7 @@ if (!window.customElements.get('button-list')) {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            position: relative;
           }
 
           .button-content img {
@@ -552,7 +655,21 @@ if (!window.customElements.get('button-list')) {
             position: relative;
           }
 
-          .button-list-container.is-readonly::before {
+          /* Design-time overlay to indicate non-interactable - applied to each button */
+          .button-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(248, 249, 250, 0.3) 0%, rgba(241, 245, 249, 0.2) 100%);
+            pointer-events: none;
+            border-radius: var(--button-radius, var(--button-rounding, var(--k2-radius)));
+          }
+
+          /* Disabled overlay applied to each button when container is disabled */
+          .button-list-container.is-disabled .button-item::after {
             content: '';
             position: absolute;
             top: 0;
@@ -561,7 +678,24 @@ if (!window.customElements.get('button-list')) {
             bottom: 0;
             background: color-mix(in srgb, #f8f9fa 80%, transparent);
             pointer-events: none;
-            border-radius: var(--k2-radius);
+            border-radius: var(--button-radius, var(--button-rounding, var(--k2-radius)));
+          }
+
+          /* Readonly overlay applied to each button when container is readonly */
+          .button-list-container.is-readonly .button-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: color-mix(in srgb, #f8f9fa 80%, transparent);
+            pointer-events: none;
+            border-radius: var(--button-radius, var(--button-rounding, var(--k2-radius)));
+          }
+
+          .button-list-wrapper {
+            position: relative;
           }
         </style>
         <div class="button-list-container">
@@ -569,35 +703,260 @@ if (!window.customElements.get('button-list')) {
         </div>
       `;
 
-      // Get references
-      this.container = this.shadowRoot.querySelector('.button-list-container');
-      this.wrapper = this.shadowRoot.querySelector('.button-list-wrapper');
+      this.container = this._shadow.querySelector('.button-list-container');
+      this.wrapper = this._shadow.querySelector('.button-list-wrapper');
 
-      // Apply initial property values
-      if (this._height && this.container) {
-        this.container.style.height = isNaN(this._height) ? String(this._height) : `${this._height}px`;
-      }
-      if (this._width && this.container) {
-        this.container.style.width = isNaN(this._width) ? String(this._width) : `${this._width}px`;
-      }
-      if (this.container) {
-        this.container.style.display = this._isVisible ? '' : 'none';
-        this.container.classList.toggle('is-disabled', !this._isEnabled);
-        this.container.classList.toggle('is-readonly', this._isReadOnly);
-      }
+      this._applyContainerState();
+      this._applyStyleTokens();
 
-      // Set CSS custom properties
-      this.ButtonHeight = this._buttonHeight;
-      this.ButtonWidth = this._buttonWidth;
-      this.ButtonRadius = this._buttonRadius;
-      this.ButtonSpacing = this._buttonSpacing;
-
-      // Set _hasRendered BEFORE calling _updatePreview so it can render buttons
       this._hasRendered = true;
-      
-      // Render preview buttons
       this._updatePreview();
       this.dispatchEvent(new Event('Rendered'));
+
+      super._render();
+    }
+
+    _applyContainerState() {
+      if (!this.container) {
+        return;
+      }
+
+      if (this._height) {
+        this.container.style.height = isNaN(this._height) ? String(this._height) : `${this._height}px`;
+      } else {
+        this.container.style.removeProperty('height');
+      }
+
+      if (this._width) {
+        this.container.style.width = isNaN(this._width) ? String(this._width) : `${this._width}px`;
+      } else {
+        this.container.style.removeProperty('width');
+      }
+
+      this.container.style.display = this._isVisible ? '' : 'none';
+      this.container.classList.toggle('is-disabled', !this._isEnabled);
+      this.container.classList.toggle('is-readonly', this._isReadOnly);
+    }
+
+    _applyStyleTokens() {
+      if (!this.container) {
+        return;
+      }
+
+      const applyOrRemove = (prop, value, target = this.container) => {
+        if (!target) return;
+        const styleTarget = typeof target.setProperty === 'function' ? target : target.style;
+        if (!styleTarget) return;
+
+        if (value && value.toString().trim().length > 0) {
+          styleTarget.setProperty(prop, value);
+        } else {
+          styleTarget.removeProperty(prop);
+        }
+      };
+
+      applyOrRemove('--button-height', this._buttonHeight);
+      applyOrRemove('--button-width', this._buttonWidth);
+      applyOrRemove('--button-radius', this._buttonRadius);
+      applyOrRemove('--button-spacing', this._buttonSpacing, this.style);
+      applyOrRemove('--image-size', this._imageSize, this.style);
+      applyOrRemove('--image-fit', this._imageFit, this.style);
+      applyOrRemove('--content-align', this._contentAlignment, this.style);
+      applyOrRemove('--icon-spacing', this._iconSpacing, this.style);
+    }
+
+    _ensureFallbackPreview() {
+      if (Array.isArray(this._previewItems) && this._previewItems.length > 0) {
+        return;
+      }
+      this._useFallbackPreview();
+    }
+
+    _useFallbackPreview() {
+      let fallbackItems = [];
+
+      if (Array.isArray(this.FixedListItems) && this.FixedListItems.length > 0) {
+        fallbackItems = this.FixedListItems;
+      } else if (this._list && typeof this._list === 'string') {
+        fallbackItems = this._tryParseListString(this._list);
+      } else {
+        const attrList = this.getAttribute('list');
+        if (attrList) {
+          fallbackItems = this._tryParseListString(attrList);
+        }
+      }
+
+      if (!Array.isArray(fallbackItems) || fallbackItems.length === 0) {
+        fallbackItems = this._tryParseListString(this._initialListValue);
+      }
+
+      this._dataItems = Array.isArray(fallbackItems) ? fallbackItems : [];
+      this._previewItems = this._mapItems(this._dataItems);
+      this._refreshPreview();
+    }
+
+    _refreshPreview() {
+      if (this._hasRendered) {
+        this._updatePreview();
+      }
+    }
+
+    _tryParseListString(value) {
+      if (!value) {
+        return [];
+      }
+      if (Array.isArray(value)) {
+        return value;
+      }
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.error('[Button List DESIGNTIME] JSON parse error:', error);
+        return [];
+      }
+    }
+
+    _mapItems(items) {
+      if (!Array.isArray(items)) {
+        return [];
+      }
+
+      const displayProperty = this._listConfig?.partmappings?.Display || "display";
+      const valueProperty = this._listConfig?.partmappings?.Value || "value";
+
+      return items.map(item => {
+        const value = item?.[valueProperty] ?? item?.value ?? item?.id ?? '';
+        const display = this._resolveDisplayValue(item, displayProperty);
+        const icon = item?.icon || item?.Icon || item?.imageUrl || null;
+
+        return {
+          display: display && display.toString().trim().length > 0 ? display : "[Empty]",
+          value: value,
+          icon: icon,
+          rawData: item
+        };
+      });
+    }
+
+    _resolveDisplayValue(item, displayProperty) {
+      if (!item) {
+        return '';
+      }
+
+      if (displayProperty && typeof displayProperty === 'string' && displayProperty.startsWith('<Template>')) {
+        return this.parseDisplayTemplate(displayProperty, item);
+      }
+
+      if (displayProperty && Object.prototype.hasOwnProperty.call(item, displayProperty)) {
+        return item[displayProperty];
+      }
+
+      return item.display ?? item.text ?? item.name ?? '';
+    }
+
+    _updatePreview() {
+      if (!this._hasRendered || !this.wrapper) {
+        return;
+      }
+
+      const itemsToShow = this._applyMaxItems(this._previewItems);
+      this.wrapper.innerHTML = '';
+
+      if (!Array.isArray(itemsToShow) || itemsToShow.length === 0) {
+        const empty = document.createElement('span');
+        empty.className = 'button-empty-state';
+        empty.textContent = 'Empty';
+        this.wrapper.appendChild(empty);
+        return;
+      }
+
+      itemsToShow.forEach(item => {
+        const button = this._createPreviewButton(item);
+        this.wrapper.appendChild(button);
+      });
+    }
+
+    _applyMaxItems(items) {
+      if (!Array.isArray(items)) {
+        return [];
+      }
+      if (this._maxItems > 0 && items.length > this._maxItems) {
+        return items.slice(0, this._maxItems);
+      }
+      return items;
+    }
+
+    _createPreviewButton(item) {
+      const button = document.createElement('button');
+      button.className = `button-item button-size-${this._buttonSize} button-style-${this._buttonStyle || 'normal'}`;
+      button.setAttribute('type', 'button');
+      button.setAttribute('data-value', item.value ?? '');
+      button.disabled = true;
+
+      const contentSpan = document.createElement('span');
+      contentSpan.className = 'button-content';
+
+      const iconPosition = this._iconPosition || 'left';
+      const showImage = !!item.icon && iconPosition !== 'none';
+      const showText = (item.display || item.value) && iconPosition !== 'only';
+
+      if (iconPosition === 'top' || iconPosition === 'bottom') {
+        contentSpan.style.flexDirection = 'column';
+        const alignMap = {
+          'start': 'flex-start',
+          'center': 'center',
+          'end': 'flex-end'
+        };
+        contentSpan.style.alignItems = alignMap[this._contentAlignment] || 'center';
+      }
+
+      const appendImage = () => {
+        if (!showImage) return;
+        const img = document.createElement('img');
+        img.src = item.icon;
+        img.alt = item.display || '';
+        contentSpan.appendChild(img);
+      };
+
+      if (showImage && (iconPosition === 'left' || iconPosition === 'top')) {
+        appendImage();
+      }
+
+      if (showText) {
+        contentSpan.appendChild(document.createTextNode(item.display || item.value || ''));
+      }
+
+      if (showImage && (iconPosition === 'right' || iconPosition === 'bottom')) {
+        appendImage();
+      }
+
+      button.appendChild(contentSpan);
+
+      if (item.value == this._value) {
+        button.classList.add('selected');
+      }
+
+      return button;
+    }
+
+    _setAttributeSilently(attrName, value) {
+      if (!this._attributeWriteLock) {
+        this._attributeWriteLock = new Set();
+      }
+      const normalized = value === null || value === undefined ? '' : String(value);
+      const current = this.getAttribute(attrName);
+      const normalizedCurrent = current === null ? '' : current;
+      if (normalizedCurrent === normalized) {
+        return;
+      }
+      this._attributeWriteLock.add(attrName);
+      if (normalized === '') {
+        this.removeAttribute(attrName);
+      } else {
+        this.setAttribute(attrName, normalized);
+      }
+      this._attributeWriteLock.delete(attrName);
     }
   });
 }

@@ -96,7 +96,6 @@ button-list {
     opacity: 0;
     transition: opacity var(--button-transition);
     pointer-events: none;
-    z-index: 0;
 }
 
 .button-item:hover:not(.selected):not(:disabled) {
@@ -194,7 +193,8 @@ button-list {
     position: relative;
 }
 
-.button-list-container.is-readonly::before {
+/* Disabled overlay applied to each button when container is disabled */
+.button-list-container.is-disabled .button-item::after {
     content: '';
     position: absolute;
     top: 0;
@@ -203,7 +203,20 @@ button-list {
     bottom: 0;
     background: color-mix(in srgb, #f8f9fa 80%, transparent);
     pointer-events: none;
-    border-radius: var(--button-radius);
+    border-radius: var(--button-radius, 6px);
+}
+
+/* Readonly overlay applied to each button when container is readonly */
+.button-list-container.is-readonly .button-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: color-mix(in srgb, #f8f9fa 80%, transparent);
+    pointer-events: none;
+    border-radius: var(--button-radius, 6px);
 }
 
 .button-list-container.is-readonly .button-item {

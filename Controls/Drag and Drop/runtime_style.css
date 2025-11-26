@@ -1,0 +1,545 @@
+drag-drop-control {
+  display: block;
+  width: 100%;
+  min-height: 70px;
+  font-family: var(--drag-drop-font-family, var(--main-font-family, "Poppins", "Open Sans Regular", Helvetica, sans-serif));
+  color: var(--drag-drop-text-color, var(--file-upload-text-color, var(--normal-text-color, #1f2937)));
+  --drag-drop-text-color: var(--file-upload-text-color, var(--normal-text-color, #1f2937));
+  --drag-drop-text-muted: var(--file-upload-watermark-text-color, #6b7280);
+  --drag-drop-border-color: var(--file-upload-border-color, #cbd5f5);
+  --drag-drop-border-active: var(--file-upload-focus-border-color, #2563eb);
+  --drag-drop-background: var(--file-upload-background-color, #f8fafc);
+  --drag-drop-background-active: var(--file-upload-hover-background-color, #e0edff);
+  --drag-drop-icon-color: var(--icon-base-color, #2563eb);
+  --drag-drop-clear-icon-color: var(--icon-base-secondary-color, #666666);
+  --drag-drop-outline-color: var(--input-focus-border-color, #2563eb);
+  --drag-drop-disabled-overlay: var(--input-disabled-background-color, rgba(248, 250, 252, 0.9));
+  --drag-drop-disabled-border: var(--input-disabled-border-color, rgba(79, 70, 229, 0.25));
+  --drag-drop-readonly-overlay: var(--input-readonly-background-color, rgba(255, 255, 255, 0.6));
+  --drag-drop-readonly-border: var(--input-readonly-border-color, rgba(148, 163, 184, 0.9));
+  --drag-drop-error-border: var(--input-error-border-color, #dc2626);
+  --drag-drop-error-background: var(--input-error-background-color, #fef2f2);
+  --drag-drop-error-text: var(--error-text-color, #b71c1c);
+}
+
+drag-drop-control[dir="rtl"] {
+  direction: rtl;
+}
+
+drag-drop-control[dir="ltr"] {
+  direction: ltr;
+}
+
+drag-drop-control[hidden] {
+  display: none !important;
+}
+
+drag-drop-control .drag-drop-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  --icon-only-size: 140px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+drag-drop-control .drag-drop-root.compact-mode {
+  min-height: 60px;
+}
+
+drag-drop-control .drag-drop-root.small-mode {
+  min-height: 40px;
+}
+
+drag-drop-control .drop-zone {
+  border: 2px dashed var(--drag-drop-border-color, #cbd5f5);
+  border-radius: 12px;
+  padding: 18px 20px;
+  width: 100%;
+  height: 100%;
+  min-height: 70px;
+  box-sizing: border-box;
+  background: var(--drag-drop-background, #f8fafc);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+drag-drop-control .drop-zone:focus-visible {
+  outline: 2px solid var(--drag-drop-outline-color, #2563eb);
+  outline-offset: 4px;
+}
+
+drag-drop-control .drop-zone.dragover,
+drag-drop-control .drop-zone.has-file {
+  border-color: var(--drag-drop-border-active, #2563eb);
+  background: var(--drag-drop-background-active, #e0edff);
+}
+
+drag-drop-control .drop-icon {
+  width: clamp(52px, 14vw, 80px);
+  height: clamp(52px, 14vw, 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+drag-drop-control .drop-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--drag-drop-icon-color, #2563eb);
+  stroke-width: 1.8;
+  transition: opacity 0.2s ease;
+}
+
+drag-drop-control .drop-icon .file-indicator {
+  position: absolute;
+  inset: 2px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--drag-drop-icon-color, #2563eb);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+drag-drop-control .drop-zone.has-file .drop-icon svg {
+  opacity: 0;
+}
+
+drag-drop-control .drop-zone.has-file .drop-icon .file-indicator {
+  opacity: 1;
+}
+
+drag-drop-control .clear-upload-button {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: none;
+  background: none;
+  color: var(--drag-drop-clear-icon-color, #666666);
+  font-family: var(--drag-drop-font-family, var(--main-font-family, "Poppins", "Open Sans Regular", Helvetica, sans-serif));
+  width: 1.5rem;
+  height: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  transition: color 0.2s ease, opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+drag-drop-control .clear-upload-button:hover,
+drag-drop-control .clear-upload-button:focus-visible {
+  color: var(--drag-drop-text-color, #1f2937);
+}
+
+drag-drop-control .clear-upload-button:focus-visible {
+  outline: 2px solid var(--drag-drop-error-border, #dc2626);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+drag-drop-control .clear-upload-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+drag-drop-control .clear-upload-button svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+drag-drop-control[dir="rtl"] .clear-upload-button {
+  right: auto;
+  left: 8px;
+}
+
+drag-drop-control .drop-zone:not(.has-file) .clear-upload-button {
+  display: none;
+}
+
+drag-drop-control .drag-drop-root.icon-only .drop-zone {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  min-height: 56px;
+  padding: 10px 12px;
+  gap: 0;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+drag-drop-control .drag-drop-root.icon-only .drop-icon {
+  width: clamp(40px, 12vw, 56px);
+  height: clamp(40px, 12vw, 56px);
+}
+
+drag-drop-control .drag-drop-root.icon-only .drop-icon .file-indicator {
+  border: none;
+  background: transparent;
+  font-size: clamp(1.5rem, calc(var(--icon-only-size, 140px) * 0.25), 3rem);
+  color: var(--drag-drop-icon-color, #2563eb);
+}
+
+drag-drop-control .drag-drop-root.icon-only .drop-copy {
+  display: none;
+}
+
+drag-drop-control .drag-drop-root.icon-only .clear-upload-button {
+  top: 2px;
+  right: 4px;
+}
+
+drag-drop-control[dir="rtl"] .drag-drop-root.icon-only .clear-upload-button {
+  right: auto;
+  left: 4px;
+}
+
+drag-drop-control .drag-drop-root.icon-only.borderless .drop-zone,
+drag-drop-control .drag-drop-root.icon-only.borderless .drop-zone.dragover,
+drag-drop-control .drag-drop-root.icon-only.borderless .drop-zone.has-file {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+drag-drop-control .drag-drop-root.compact-mode.icon-only .drop-zone {
+  padding: 6px;
+}
+
+drag-drop-control .drag-drop-root.compact-mode.icon-only .drop-icon {
+  width: 40px;
+  height: 40px;
+}
+
+drag-drop-control .drag-drop-root.compact-mode.icon-only.borderless .drop-zone,
+drag-drop-control .drag-drop-root.compact-mode.icon-only.borderless .drop-zone.dragover,
+drag-drop-control .drag-drop-root.compact-mode.icon-only.borderless .drop-zone.has-file {
+  border: none;
+  background: transparent;
+}
+
+drag-drop-control .drag-drop-root.borderless .drop-zone {
+  border: none;
+  background: transparent;
+}
+
+drag-drop-control .drag-drop-root.borderless .drop-zone.dragover,
+drag-drop-control .drag-drop-root.borderless .drop-zone.has-file {
+  border: none;
+  background: transparent;
+}
+
+drag-drop-control .drop-copy {
+  text-align: left;
+  color: var(--drag-drop-text-color, #1f2937);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+drag-drop-control[dir="rtl"] .drop-copy {
+  direction: rtl;
+  text-align: right;
+  align-items: flex-end;
+}
+
+drag-drop-control[dir="ltr"] .drop-copy {
+  direction: ltr;
+  text-align: left;
+}
+
+drag-drop-control .empty-state .primary {
+  font-weight: 600;
+  font-size: 14px;
+  display: block;
+}
+
+drag-drop-control .empty-state .secondary {
+  font-size: 12px;
+  color: var(--drag-drop-text-muted, #6b7280);
+}
+
+drag-drop-control .file-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+drag-drop-control[dir="rtl"] .file-preview {
+  direction: rtl;
+  align-items: flex-end;
+  text-align: right;
+}
+
+drag-drop-control[dir="ltr"] .file-preview {
+  direction: ltr;
+}
+
+drag-drop-control .file-preview .file-name {
+  font-weight: 600;
+  font-size: 14px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+drag-drop-control .file-preview .file-meta {
+  font-size: 12px;
+  color: var(--drag-drop-text-muted, #6b7280);
+}
+
+drag-drop-control .file-preview .file-helper {
+  font-size: 12px;
+  color: var(--drag-drop-text-muted, #6b7280);
+}
+
+drag-drop-control .drop-zone:not(.has-file) .file-preview {
+  display: none;
+}
+
+drag-drop-control .drop-zone.has-file .empty-state {
+  display: none;
+}
+
+drag-drop-control .state-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+drag-drop-control .drag-drop-root.is-disabled .state-overlay {
+  opacity: 1;
+  background: var(--drag-drop-disabled-overlay, rgba(248, 250, 252, 0.9));
+}
+
+drag-drop-control .drag-drop-root.is-readonly .state-overlay {
+  opacity: 1;
+  background: var(--drag-drop-readonly-overlay, rgba(255, 255, 255, 0.6));
+}
+
+drag-drop-control .drag-drop-root.is-disabled .drop-zone {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+drag-drop-control .drag-drop-root.is-readonly .drop-zone {
+  cursor: default;
+  pointer-events: none;
+  border-color: var(--drag-drop-readonly-border, rgba(148, 163, 184, 0.9));
+}
+
+drag-drop-control .drag-drop-root.compact-mode .drop-zone {
+  padding: 14px 16px;
+  gap: 10px;
+  border-radius: 10px;
+}
+
+drag-drop-control .drag-drop-root.compact-mode .drop-icon {
+  width: 44px;
+  height: 44px;
+}
+
+drag-drop-control .drag-drop-root.compact-mode .drop-icon .file-indicator {
+  font-size: 1.4rem;
+}
+
+drag-drop-control .drag-drop-root.compact-mode .empty-state .primary,
+drag-drop-control .drag-drop-root.compact-mode .file-preview .file-name {
+  font-size: 13px;
+}
+
+drag-drop-control .drag-drop-root.compact-mode .empty-state .secondary,
+drag-drop-control .drag-drop-root.compact-mode .file-preview .file-meta,
+drag-drop-control .drag-drop-root.compact-mode .file-preview .file-helper {
+  font-size: 11px;
+}
+
+drag-drop-control .drag-drop-root.small-mode .drop-zone {
+  padding: 8px 10px;
+  gap: 6px;
+  border-radius: 8px;
+  min-height: 56px;
+}
+
+drag-drop-control .drag-drop-root.small-mode .drop-icon {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+}
+
+drag-drop-control .drag-drop-root.small-mode .drop-icon .file-indicator {
+  font-size: 1rem;
+  border-radius: 8px;
+}
+
+drag-drop-control .drag-drop-root.small-mode .drop-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+drag-drop-control .drag-drop-root.small-mode .empty-state .primary,
+drag-drop-control .drag-drop-root.small-mode .file-preview .file-name {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+drag-drop-control .drag-drop-root.small-mode .empty-state .secondary,
+drag-drop-control .drag-drop-root.small-mode .file-preview .file-meta,
+drag-drop-control .drag-drop-root.small-mode .file-preview .file-helper {
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+drag-drop-control .drag-drop-root.small-mode .file-preview {
+  align-items: flex-start;
+}
+
+drag-drop-control .drag-drop-root.narrow-mode .drop-zone {
+  padding: 12px 10px;
+}
+
+drag-drop-control .drag-drop-root.narrow-mode .empty-state .primary,
+drag-drop-control .drag-drop-root.narrow-mode .file-preview .file-name {
+  font-size: 13px;
+  word-break: break-word;
+  white-space: normal;
+}
+
+drag-drop-control .drag-drop-root.narrow-mode .empty-state .secondary,
+drag-drop-control .drag-drop-root.narrow-mode .file-preview .file-meta,
+drag-drop-control .drag-drop-root.narrow-mode .file-preview .file-helper {
+  font-size: 11px;
+  word-break: break-word;
+  white-space: normal;
+}
+
+drag-drop-control .file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+drag-drop-control .drag-drop-root.has-error .drop-zone {
+  border-color: var(--drag-drop-error-border, #dc2626);
+  background: var(--drag-drop-error-background, #fef2f2);
+}
+
+drag-drop-control .drag-drop-root.has-error .drop-zone.error-state {
+  border-color: var(--drag-drop-error-border, #dc2626);
+  background: var(--drag-drop-error-background, #fef2f2);
+}
+
+@keyframes drag-drop-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+
+/* Error popup that appears above the control */
+.drag-drop-error-popup {
+  position: absolute;
+  background: var(--drag-drop-error-background, #fef2f2);
+  color: var(--drag-drop-error-text, #b71c1c);
+  border: 1px solid var(--drag-drop-error-border, #dc2626);
+  padding: 8px 32px 8px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: normal;
+  max-width: min(90vw, 400px);
+  word-wrap: break-word;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--drag-drop-error-border, #dc2626) 30%, transparent);
+  pointer-events: auto;
+  font-family: var(--drag-drop-font-family, var(--main-font-family, "Poppins", "Open Sans Regular", Helvetica, sans-serif));
+  line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.drag-drop-error-popup-message {
+  flex: 1;
+  min-width: 0;
+}
+
+.drag-drop-error-popup-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: var(--drag-drop-error-text, #b71c1c);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.drag-drop-error-popup-close:hover {
+  background-color: color-mix(in srgb, var(--drag-drop-error-text, #b71c1c) 15%, transparent);
+}
+
+.drag-drop-error-popup-close:focus-visible {
+  outline: 2px solid var(--drag-drop-error-border, #dc2626);
+  outline-offset: 2px;
+}
+
+.drag-drop-error-popup-close svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+}
+
+/* Ensure popup appears on top without z-index by being appended to form/body */
+form .drag-drop-error-popup,
+body > .drag-drop-error-popup {
+  position: absolute;
+}
+
+

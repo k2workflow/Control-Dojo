@@ -1,0 +1,105 @@
+{
+  "icon": "icon.svg",
+  "designtimeScriptFileNames": ["designtime_logic.js"],
+  "designtimeStyleFileNames": ["designtime_style.css"],
+  "runtimeScriptFileNames": ["runtime_logic.js"],
+  "runtimeStyleFileNames": ["runtime_style.css"],
+  "imageFileNames": ["icon.svg"],
+  "displayName": "Drag and Drop",
+  "description": "A drag and drop control that allows users to upload files to the K2 platform.",
+  "tagName": "drag-drop-control",
+  "supports": ["Property", "Width", "Height", "Value", "IsVisible", "IsEnabled", "IsReadOnly"],
+  "events": [
+    { "id": "OnChanged", "displayname": "Changed" },
+    { "id": "OnFocus", "displayname": "Focus" },
+    { "id": "OnBlur", "displayname": "Blur" },
+    { "id": "OnEnter", "displayname": "Enter" }
+  ],
+  "datatypes": ["File"],
+  "defaultEvent": "OnChanged",
+  "properties": [
+    {
+      "id": "Watermark",
+      "friendlyname": "Drop Zone Text",
+      "type": "text",
+      "refreshdisplay": "true",
+      "inputlength": "255",
+      "initialvalue": "",
+      "changesdisplay": true
+    },
+    {
+      "id": "Accept",
+      "friendlyname": "Accepted File Types",
+      "type": "text",
+      "refreshdisplay": "true",
+      "inputlength": "255",
+      "initialvalue": "",
+      "changesdisplay": true
+    },
+    {
+      "id": "Tooltip",
+      "friendlyname": "Tooltip",
+      "type": "text",
+      "refreshdisplay": "true",
+      "inputlength": "255",
+      "initialvalue": "Click here to attach a file",
+      "changesdisplay": true
+    },
+    {
+      "id": "MaxSize",
+      "friendlyname": "Max Size",
+      "type": "text",
+      "refreshdisplay": "true",
+      "inputlength": "32",
+      "initialvalue": "",
+      "changesdisplay": true
+    },
+    {
+      "id": "ShowInformation",
+      "friendlyname": "Show Information",
+      "type": "bool",
+      "refreshdisplay": "true",
+      "initialvalue": "true",
+      "changesdisplay": true
+    },
+    {
+      "id": "Borderless",
+      "friendlyname": "Borderless",
+      "type": "bool",
+      "refreshdisplay": "true",
+      "initialvalue": "false",
+      "changesdisplay": true
+    },
+    {
+      "id": "IsReadOnly",
+      "friendlyname": "Read Only",
+      "type": "bool",
+      "refreshdisplay": "true",
+      "initialvalue": "false"
+    },
+    {
+      "id": "Width",
+      "friendlyname": "Width",
+      "type": "text",
+      "refreshdisplay": "true",
+      "inputlength": "50",
+      "initialvalue": "100%"
+    },
+    {
+      "id": "Height",
+      "friendlyname": "Height",
+      "type": "text",
+      "refreshdisplay": "true",
+      "inputlength": "50",
+      "initialvalue": "70px"
+    },
+    {
+      "id": "Value",
+      "friendlyname": "Value",
+      "type": "text",
+      "refreshdisplay": "true",
+      "inputlength": "1024",
+      "initialvalue": ""
+    }
+  ]
+}
