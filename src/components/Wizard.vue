@@ -434,12 +434,25 @@
                 <!-- Regular Initial Value Input -->
                 <div v-else>
                   <label :class="['block text-sm font-medium mb-1 transition-colors duration-200', isDarkMode ? 'text-gray-300' : 'text-gray-700']">Initial Value</label>
-                  <input
+                  <textarea
                     v-model="prop.initialvalue"
-                    type="text"
-                    placeholder="Default value"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200"
-                  />
+                    placeholder="Default value (single-line recommended)"
+                    @blur="validateCustomProperties"
+                    @input="validateCustomProperties"
+                    rows="2"
+                    :class="[
+                      'bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200 resize-y',
+                      validationErrors[`customProp_${index}_initialvalue`] 
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300'
+                    ]"
+                  ></textarea>
+                  <p v-if="validationErrors[`customProp_${index}_initialvalue`]" class="text-red-500 text-sm mt-1">
+                    {{ validationErrors[`customProp_${index}_initialvalue`] }}
+                  </p>
+                  <p v-else class="text-gray-500 text-xs mt-1">
+                    Tip: Press Enter in this field to test newline validation. Multi-line values may break K2 runtime.
+                  </p>
                 </div>
               </div>
               <div class="mt-4 flex justify-end">
@@ -530,7 +543,7 @@
                     />
                     <div class="flex-1">
                       <div :class="['text-sm font-medium transition-colors duration-200', isDarkMode ? 'text-gray-200' : 'text-gray-900']">
-                        {{ event.friendlyname }}
+                        {{ (event.displayname || event.friendlyname || event.id) + ' (' + event.id + ')' }}
                       </div>
                       <div :class="['text-xs transition-colors duration-200', isDarkMode ? 'text-gray-400' : 'text-gray-500']">
                         {{ event.description }}
@@ -569,9 +582,9 @@
                   <p v-if="validationErrors[`event_${index}_id`]" class="text-red-500 text-sm mt-1">{{ validationErrors[`event_${index}_id`] }}</p>
                 </div>
                 <div>
-                  <label :class="['block text-sm font-medium mb-1 transition-colors duration-200', isDarkMode ? 'text-gray-300' : 'text-gray-700']">Friendly Name</label>
+                  <label :class="['block text-sm font-medium mb-1 transition-colors duration-200', isDarkMode ? 'text-gray-300' : 'text-gray-700']">Display Name</label>
                   <input
-                    v-model="event.friendlyname"
+                    v-model="event.displayname"
                     type="text"
                     placeholder="e.g., Custom Event"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200"
@@ -1041,39 +1054,39 @@ export default {
       ],
       eventTemplates: {
         'Standard Form': [
-          { id: 'Changed', friendlyname: 'Value Changed', description: 'Fired when the control value changes' },
-          { id: 'Focus', friendlyname: 'Gained Focus', description: 'Fired when control receives focus' },
-          { id: 'Blur', friendlyname: 'Lost Focus', description: 'Fired when control loses focus' },
-          { id: 'OnEnter', friendlyname: 'Enter Key Pressed', description: 'Fired when Enter key is pressed' }
+          { id: 'Changed', displayname: 'Value Changed', description: 'Fired when the control value changes' },
+          { id: 'Focus', displayname: 'Gained Focus', description: 'Fired when control receives focus' },
+          { id: 'Blur', displayname: 'Lost Focus', description: 'Fired when control loses focus' },
+          { id: 'OnEnter', displayname: 'Enter Key Pressed', description: 'Fired when Enter key is pressed' }
         ],
         'Interactive': [
-          { id: 'Click', friendlyname: 'Clicked', description: 'Fired when control is clicked' },
-          { id: 'DoubleClick', friendlyname: 'Double Clicked', description: 'Fired when control is double-clicked' },
-          { id: 'MouseEnter', friendlyname: 'Mouse Enter', description: 'Fired when mouse enters control' },
-          { id: 'MouseLeave', friendlyname: 'Mouse Leave', description: 'Fired when mouse leaves control' }
+          { id: 'Click', displayname: 'Clicked', description: 'Fired when control is clicked' },
+          { id: 'DoubleClick', displayname: 'Double Clicked', description: 'Fired when control is double-clicked' },
+          { id: 'MouseEnter', displayname: 'Mouse Enter', description: 'Fired when mouse enters control' },
+          { id: 'MouseLeave', displayname: 'Mouse Leave', description: 'Fired when mouse leaves control' }
         ],
         'File Upload': [
-          { id: 'FileSelected', friendlyname: 'File Selected', description: 'Fired when files are selected' },
-          { id: 'FileUploaded', friendlyname: 'File Uploaded', description: 'Fired when files are uploaded' },
-          { id: 'UploadProgress', friendlyname: 'Upload Progress', description: 'Fired during upload progress' },
-          { id: 'UploadComplete', friendlyname: 'Upload Complete', description: 'Fired when upload finishes' }
+          { id: 'FileSelected', displayname: 'File Selected', description: 'Fired when files are selected' },
+          { id: 'FileUploaded', displayname: 'File Uploaded', description: 'Fired when files are uploaded' },
+          { id: 'UploadProgress', displayname: 'Upload Progress', description: 'Fired during upload progress' },
+          { id: 'UploadComplete', displayname: 'Upload Complete', description: 'Fired when upload finishes' }
         ],
         'Location/Map': [
-          { id: 'LocationChanged', friendlyname: 'Location Changed', description: 'Fired when location is selected' },
-          { id: 'MapClicked', friendlyname: 'Map Clicked', description: 'Fired when map is clicked' },
-          { id: 'GeofenceEntered', friendlyname: 'Geofence Entered', description: 'Fired when entering geofence' },
-          { id: 'GeofenceExited', friendlyname: 'Geofence Exited', description: 'Fired when exiting geofence' }
+          { id: 'LocationChanged', displayname: 'Location Changed', description: 'Fired when location is selected' },
+          { id: 'MapClicked', displayname: 'Map Clicked', description: 'Fired when map is clicked' },
+          { id: 'GeofenceEntered', displayname: 'Geofence Entered', description: 'Fired when entering geofence' },
+          { id: 'GeofenceExited', displayname: 'Geofence Exited', description: 'Fired when exiting geofence' }
         ],
         'Calendar/Date': [
-          { id: 'DateSelected', friendlyname: 'Date Selected', description: 'Fired when date is selected' },
-          { id: 'MonthChanged', friendlyname: 'Month Changed', description: 'Fired when month changes' },
-          { id: 'YearChanged', friendlyname: 'Year Changed', description: 'Fired when year changes' },
-          { id: 'DateRangeSelected', friendlyname: 'Date Range Selected', description: 'Fired when date range is selected' }
+          { id: 'DateSelected', displayname: 'Date Selected', description: 'Fired when date is selected' },
+          { id: 'MonthChanged', displayname: 'Month Changed', description: 'Fired when month changes' },
+          { id: 'YearChanged', displayname: 'Year Changed', description: 'Fired when year changes' },
+          { id: 'DateRangeSelected', displayname: 'Date Range Selected', description: 'Fired when date range is selected' }
         ],
         'Data Display': [
-          { id: 'DataUpdated', friendlyname: 'Data Updated', description: 'Fired when data is updated' },
-          { id: 'TileClicked', friendlyname: 'Tile Clicked', description: 'Fired when tile is clicked' },
-          { id: 'AnimationComplete', friendlyname: 'Animation Complete', description: 'Fired when animation finishes' }
+          { id: 'DataUpdated', displayname: 'Data Updated', description: 'Fired when data is updated' },
+          { id: 'TileClicked', displayname: 'Tile Clicked', description: 'Fired when tile is clicked' },
+          { id: 'AnimationComplete', displayname: 'Animation Complete', description: 'Fired when animation finishes' }
         ]
       },
       controlData: {
@@ -1082,8 +1095,10 @@ export default {
         tagNameManuallyEdited: false, // Track if user manually edited tag name
         icon: 'icon.svg',
         iconFile: null,
+        iconFileDataUrl: null,
         iconPreview: null,
         iconFileName: null,
+        iconFileType: null,
         useDefaultIcon: false,
         description: '',
         standardProperties: ['Width', 'Height', 'IsVisible', 'IsEnabled'],
@@ -1279,12 +1294,14 @@ export default {
 
         this.controlData.iconFile = file
         this.controlData.iconFileName = file.name
+        this.controlData.iconFileType = file.type
         this.controlData.useDefaultIcon = false
 
         // Create preview
         const reader = new FileReader()
         reader.onload = (e) => {
           this.controlData.iconPreview = e.target.result
+          this.controlData.iconFileDataUrl = e.target.result
         }
         reader.readAsDataURL(file)
 
@@ -1294,8 +1311,10 @@ export default {
     },
     removeIcon() {
       this.controlData.iconFile = null
+      this.controlData.iconFileDataUrl = null
       this.controlData.iconPreview = null
       this.controlData.iconFileName = null
+      this.controlData.iconFileType = null
       this.controlData.icon = 'icon.svg'
       this.controlData.useDefaultIcon = false
       delete this.validationErrors.icon
@@ -1304,8 +1323,10 @@ export default {
       if (this.controlData.useDefaultIcon) {
         // Clear any uploaded icon when default is selected
         this.controlData.iconFile = null
+        this.controlData.iconFileDataUrl = null
         this.controlData.iconPreview = null
         this.controlData.iconFileName = null
+        this.controlData.iconFileType = null
         this.controlData.icon = 'icon.svg'
       }
       // Clear validation errors
@@ -1388,6 +1409,22 @@ export default {
         if (!prop.type || prop.type.trim() === '') {
           this.validationErrors[`customProp_${index}_type`] = 'Property type is required'
           hasErrors = true
+        }
+        // Validate initialvalue for unescaped newlines (causes K2 runtime syntax errors)
+        if (prop.initialvalue && typeof prop.initialvalue === 'string') {
+          // Check for actual newline characters - these break K2's code generation
+          if (prop.initialvalue.includes('\n') || prop.initialvalue.includes('\r')) {
+            this.validationErrors[`customProp_${index}_initialvalue`] = 
+              'Initial value contains actual newline characters which will break K2 runtime. Use a single-line value.'
+            hasErrors = true
+          }
+          // Check for literal backslash-n sequence (\n) - K2 interprets this as newlines in generated code
+          // When user types \n in input, it's stored as literal backslash + n, so we check for '\\n' in code
+          if (prop.initialvalue.includes('\\n') || prop.initialvalue.includes('\\r')) {
+            this.validationErrors[`customProp_${index}_initialvalue`] = 
+              'Initial value contains "\\n" or "\\r" which K2 will interpret as newlines and break runtime. Use a single-line value instead.'
+            hasErrors = true
+          }
         }
       })
       return !hasErrors
@@ -1599,7 +1636,7 @@ export default {
     addEvent() {
       this.controlData.events.push({
         id: '',
-        friendlyname: ''
+        displayname: ''
       })
     },
     toggleTemplateEvent(event, isSelected) {
@@ -1608,7 +1645,7 @@ export default {
         if (!this.controlData.events.find(e => e.id === event.id)) {
           this.controlData.events.push({
             id: event.id,
-            friendlyname: event.friendlyname
+            displayname: event.displayname || event.friendlyname || event.id
           })
         }
       } else {
@@ -1731,7 +1768,7 @@ export default {
       // Process events - use ID as friendly name if not provided
       const processedEvents = this.controlData.events.map(event => ({
         id: event.id,
-        friendlyname: event.friendlyname || event.id // Use ID as fallback
+        displayname: event.displayname || event.friendlyname || event.id // Use ID as fallback
       }))
 
       // Build supports array - include DataBinding if any listdata properties exist

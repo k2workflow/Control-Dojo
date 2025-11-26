@@ -75,6 +75,47 @@
                 </svg>
               </button>
             </div>
+            <!-- Icon Preview -->
+            <div v-if="manifest && manifest.icon" :class="['mt-2 px-2.5 py-1.5 rounded-md border flex items-center min-w-0', isDarkMode ? 'bg-dark-700/50 border-dark-600' : 'bg-slate-50 border-slate-200']">
+              <img 
+                :src="iconUrl" 
+                :alt="manifest.displayName || manifest.tagName"
+                class="w-5 h-5 object-contain flex-shrink-0"
+                @error="handleIconError"
+              />
+              <span v-if="manifest.displayName" :class="['ml-2 text-xs font-medium truncate', isDarkMode ? 'text-dark-200' : 'text-slate-700']" :title="manifest.displayName">
+                {{ manifest.displayName }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Dynamic Theme Toggle -->
+          <div class="pt-3 border-t" :class="[isDarkMode ? 'border-dark-700' : 'border-slate-200']">
+            <div class="flex items-center justify-between space-x-3">
+              <p :class="['text-sm font-medium transition-colors duration-200 m-0', isDarkMode ? 'text-dark-100' : 'text-slate-800']">
+                Dynamic Theme Preview
+              </p>
+              <div class="flex items-center justify-end">
+                <button
+                  type="button"
+                  class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                  :class="[
+                    dynamicThemeEnabled
+                      ? (isDarkMode ? 'bg-orange-500 focus-visible:ring-orange-300' : 'bg-primary-600 focus-visible:ring-primary-400')
+                      : (isDarkMode ? 'bg-dark-600 focus-visible:ring-dark-400' : 'bg-slate-300 focus-visible:ring-slate-400')
+                  ]"
+                  :aria-pressed="dynamicThemeEnabled.toString()"
+                  :title="`${dynamicThemeEnabled ? 'Enabled' : 'Disabled'} · ${dynamicThemeEnabled ? 'Click to remove Dynamic Theme Variables' : 'Click to load Dynamic Theme Variables'}`"
+                  @click="toggleDynamicTheme"
+                >
+                  <span class="sr-only">Toggle dynamic theme preview</span>
+                  <span
+                    class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200"
+                    :class="[dynamicThemeEnabled ? 'translate-x-5' : 'translate-x-1']"
+                  ></span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -354,7 +395,7 @@
                     : ''
                 ]"
               >
-                {{ event.friendlyname || event.id }}
+                {{ (event.displayname || event.friendlyname || event.id) + ' (' + event.id + ')' }}
               </button>
             </div>
             <div v-else :class="['text-sm transition-colors duration-200', isDarkMode ? 'text-dark-400' : 'text-slate-500']">
@@ -1015,11 +1056,14 @@ export default {
       propertyChangeTimeout: null,
       pollingInterval: null,
       showControlLogsOnly: false,
+      dynamicThemeEnabled: false,
       manifestFile: null,
       manifestFileDirectory: null,
       controlFiles: new Map(), // Map of file paths to File objects for loading resources
       designControlElement: null,
-      runtimeControlElement: null
+      runtimeControlElement: null,
+      _iconUrlCache: new Map(), // Cache for icon object URLs to prevent infinite loops
+      lastLoadedControlKey: '' // Track which control is currently loaded to detect switches
     }
   },
   computed: {
@@ -1058,6 +1102,11 @@ export default {
       } else {
         return `width: ${this.consoleSize}px;`
       }
+    },
+    iconUrl() {
+      if (!this.manifest || !this.manifest.icon) return ''
+      // Use resolveIcon which doesn't add cache-busting to prevent infinite loops
+      return this.resolveIcon(this.manifest.icon)
     },
     // Add computed property to get all available properties (custom + standard)
     allProperties() {
@@ -1137,6 +1186,25 @@ export default {
     }
   },
   methods: {
+    getSafeTagName() {
+      if (!this.manifest || typeof this.manifest.tagName !== 'string') {
+        return '';
+      }
+      const trimmed = this.manifest.tagName.trim();
+      if (!trimmed) {
+        return '';
+      }
+      const cleaned = trimmed.replace(/[<>]/g, ' ');
+      const tokens = cleaned.split(/\s+/).filter(Boolean);
+      const tagCandidate = tokens.find(token => {
+        const normalized = token.toLowerCase();
+        const looksLikeAttr = normalized.startsWith('data-') || normalized.startsWith('aria-');
+        const matchesCustomElement =
+          /^[a-z][0-9a-z._-]*-[0-9a-z._-]*$/i.test(token);
+        return matchesCustomElement && !looksLikeAttr;
+      });
+      return tagCandidate ? tagCandidate.toLowerCase() : '';
+    },
     toggleSection(section) {
       this.collapsedSections[section] = !this.collapsedSections[section]
     },
@@ -1147,6 +1215,82 @@ export default {
     
     clearConsole() {
       this.consoleLogs = []
+    },
+    
+    async toggleDynamicTheme() {
+      this.dynamicThemeEnabled = !this.dynamicThemeEnabled
+      if (this.dynamicThemeEnabled) {
+        await this.enableDynamicTheme()
+      } else {
+        this.disableDynamicTheme()
+      }
+      await this.refreshFramesForThemeToggle()
+    },
+    
+    async enableDynamicTheme() {
+      await Promise.allSettled(['design', 'runtime'].map(mode => this.applyDynamicThemeToFrame(mode)))
+    },
+    
+    disableDynamicTheme() {
+      ['design', 'runtime'].forEach(mode => this.removeDynamicThemeFromFrame(mode))
+    },
+
+    async refreshFramesForThemeToggle() {
+      if (!this.manifest) return
+      await this.reloadControlIntoFrames()
+    },
+    
+    async applyDynamicThemeToFrame(mode) {
+      const frame = mode === 'design' ? this.$refs.designFrame : this.$refs.runtimeFrame
+      if (!frame || !frame.contentWindow) return
+      
+      const doc = frame.contentWindow.document
+      if (!doc) return
+      
+      this.ensureThemeScope(doc, mode)
+      
+      if (doc.querySelector('link[data-dynamic-theme="true"]')) {
+        return
+      }
+      
+      const head = doc.head || doc.getElementsByTagName('head')[0]
+      if (!head) return
+      
+      await new Promise((resolve) => {
+        const link = doc.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = `./Script/DT.css?dt=${Date.now()}`
+        link.dataset.dynamicTheme = 'true'
+        link.onload = () => resolve()
+        link.onerror = () => {
+          link.remove()
+          resolve()
+        }
+        head.appendChild(link)
+      })
+    },
+    
+    removeDynamicThemeFromFrame(mode) {
+      const frame = mode === 'design' ? this.$refs.designFrame : this.$refs.runtimeFrame
+      if (!frame || !frame.contentWindow) return
+      
+      const doc = frame.contentWindow.document
+      if (!doc) return
+      
+      const links = doc.querySelectorAll('link[data-dynamic-theme="true"]')
+      links.forEach(link => {
+        link.disabled = true
+        link.remove()
+      })
+    },
+    
+    ensureThemeScope(doc, mode) {
+      if (doc.documentElement && !doc.documentElement.classList.contains('theme-entry')) {
+        doc.documentElement.classList.add('theme-entry')
+      }
+      if (doc.body && !doc.body.classList.contains('theme-entry')) {
+        doc.body.classList.add('theme-entry')
+      }
     },
     
     async copyConsole() {
@@ -1632,7 +1776,21 @@ export default {
         this.manifestBase = manifestBase
         this.manifestFile = manifestFile
         
-        this.initializeProperties()
+        // Determine control key for file uploads (use relative path as identifier)
+        const controlKey = this.normalizeControlKey(manifestRelativePath)
+        const isNewControl = controlKey && controlKey !== this.lastLoadedControlKey
+        
+        // Clear icon URL cache when loading a new manifest
+        this.clearIconCache()
+        
+        // Reset properties if this is a different control
+        this.initializeProperties(isNewControl)
+        
+        // Update the last loaded control key
+        if (controlKey) {
+          this.lastLoadedControlKey = controlKey
+        }
+        
         this.setupFrameSources()
         this.log(`Manifest loaded: ${this.manifest.displayName || this.manifest.tagName} (${this.manifest.tagName})`)
         
@@ -1672,11 +1830,15 @@ export default {
       return true
     },
     
-    async loadManifest() {
+    async loadManifest(options = {}) {
       if (!this.manifestPath) return
       
       try {
         this.log('Loading manifest: ' + this.manifestPath)
+        
+        // Determine the control key for this load operation
+        const controlKey = options.controlKey || this.normalizeControlKey(this.manifestPath)
+        const isNewControl = controlKey && controlKey !== this.lastLoadedControlKey
         
         // Try to load the manifest, handling case-insensitive filenames
         let response = await fetch(this.manifestPath, { cache: 'no-cache' })
@@ -1699,7 +1861,17 @@ export default {
         this.manifest = await response.json()
         this.manifestBase = this.manifestPath.substring(0, this.manifestPath.lastIndexOf('/')) || '.'
         
-        this.initializeProperties()
+        // Clear icon URL cache when loading a new manifest
+        this.clearIconCache()
+        
+        // Reset properties if this is a different control, otherwise preserve user edits
+        this.initializeProperties(isNewControl)
+        
+        // Update the last loaded control key
+        if (controlKey) {
+          this.lastLoadedControlKey = controlKey
+        }
+        
         this.setupFrameSources()
         this.log(`Manifest loaded: ${this.manifest.displayName || this.manifest.tagName} (${this.manifest.tagName})`)
         
@@ -1725,7 +1897,7 @@ export default {
     loadExample() {
       if (this.selectedExample) {
         this.manifestPath = this.selectedExample
-        this.loadManifest()
+        this.loadManifest({ controlKey: this.normalizeControlKey(this.selectedExample) })
       }
     },
     
@@ -1820,6 +1992,18 @@ export default {
       )
     },
     
+    // Helper method to normalize control keys for comparison
+    normalizeControlKey(path) {
+      if (!path) return ''
+      // Remove query parameters (like ?reload=timestamp)
+      const cleanPath = path.split('?')[0]
+      // For blob URLs, we can't really track them, so use a special marker
+      if (cleanPath.startsWith('blob:')) {
+        return 'blob:' + (this.manifestFile?.name || 'uploaded')
+      }
+      return cleanPath
+    },
+    
     // Update initializeProperties to handle standard properties
     initializeProperties(resetToDefaults = false) {
       if (!this.manifest) return
@@ -1832,6 +2016,14 @@ export default {
         this.propValues = this.propValues || {}
       }
       
+      // Get list of custom property IDs to avoid overwriting them with standard defaults
+      const customPropertyIds = new Set()
+      if (this.manifest.properties) {
+        this.manifest.properties.forEach(prop => {
+          customPropertyIds.add(prop.id)
+        })
+      }
+      
       // Initialize custom properties (only if not already set)
       if (this.manifest.properties) {
         this.manifest.properties.forEach(prop => {
@@ -1841,10 +2033,16 @@ export default {
         })
       }
       
-      // Initialize standard properties (only if not already set)
+      // Initialize standard properties (only if not already set AND not overridden by custom property)
       const standardProperties = this.getStandardProperties()
       standardProperties.forEach(prop => {
-        if (!this.propValues.hasOwnProperty(prop.id) || resetToDefaults) {
+        // Only initialize if:
+        // 1. Property doesn't exist in propValues, OR
+        // 2. We're resetting to defaults AND it's not a custom property override
+        const shouldInitialize = !this.propValues.hasOwnProperty(prop.id) || 
+          (resetToDefaults && !customPropertyIds.has(prop.id))
+        
+        if (shouldInitialize) {
           this.propValues[prop.id] = prop.initialvalue || ''
         }
       })
@@ -1897,9 +2095,10 @@ export default {
       try {
         // Reload the manifest first to pick up any new properties/changes
         // This ensures the property panel shows new properties from manifest.json
+        // Use the same control key to preserve property values (this is a refresh, not a switch)
         if (this.manifestPath) {
           this.log('Reloading manifest to detect new properties...')
-          await this.loadManifest()
+          await this.loadManifest({ controlKey: this.lastLoadedControlKey || this.normalizeControlKey(this.manifestPath) })
         }
         
         // Force reload both iframes to completely reset them and clear all cached resources
@@ -1939,7 +2138,8 @@ export default {
     },
     
     triggerEvent(eventId) {
-      if (!this.manifest || !this.manifest.tagName) {
+      const tagName = this.getSafeTagName();
+      if (!tagName) {
         this.log('No control loaded to trigger events on')
         return
       }
@@ -1952,7 +2152,7 @@ export default {
       
       if (designFrame && designFrame.contentWindow) {
         try {
-          const control = designFrame.contentWindow.document.querySelector(this.manifest.tagName)
+          const control = designFrame.contentWindow.document.querySelector(tagName)
           if (control) {
             const event = new designFrame.contentWindow.CustomEvent(eventId, {
               detail: { 
@@ -1970,7 +2170,7 @@ export default {
       
       if (runtimeFrame && runtimeFrame.contentWindow) {
         try {
-          const control = runtimeFrame.contentWindow.document.querySelector(this.manifest.tagName)
+          const control = runtimeFrame.contentWindow.document.querySelector(tagName)
           if (control) {
             const event = new runtimeFrame.contentWindow.CustomEvent(eventId, {
               detail: { 
@@ -1997,7 +2197,8 @@ export default {
     },
     
     triggerMethod(methodId) {
-      if (!this.manifest || !this.manifest.tagName) {
+      const tagName = this.getSafeTagName();
+      if (!tagName) {
         this.log('No control loaded to trigger methods on')
         return
       }
@@ -2051,7 +2252,7 @@ export default {
       
       if (designFrame && designFrame.contentWindow) {
         try {
-          const control = designFrame.contentWindow.document.querySelector(this.manifest.tagName)
+          const control = designFrame.contentWindow.document.querySelector(tagName)
           designSuccess = executeMethod(control, 'DESIGN', 'design-time')
         } catch (e) {
           this.log(`Failed to trigger ${methodId} on design-time: ${e.message}`)
@@ -2060,7 +2261,7 @@ export default {
       
       if (runtimeFrame && runtimeFrame.contentWindow) {
         try {
-          const control = runtimeFrame.contentWindow.document.querySelector(this.manifest.tagName)
+          const control = runtimeFrame.contentWindow.document.querySelector(tagName)
           runtimeSuccess = executeMethod(control, 'RUNTIME', 'runtime')
         } catch (e) {
           this.log(`Failed to trigger ${methodId} on runtime: ${e.message}`)
@@ -2159,12 +2360,16 @@ export default {
       this.runtimeFrameSrc = './loaders/runtime-shell.html'
     },
     
-    onFrameLoad(mode) {
+    async onFrameLoad(mode) {
       this.log(`[${mode.toUpperCase()}] Frame loaded`)
       
       // Add ResizeObserver error handling to the frame context
       const frame = mode === 'design' ? this.$refs.designFrame : this.$refs.runtimeFrame
       if (frame && frame.contentWindow) {
+        const frameDoc = frame.contentDocument || frame.contentWindow.document
+        if (frameDoc) {
+          this.ensureThemeScope(frameDoc, mode)
+        }
         frame.contentWindow.addEventListener('error', (event) => {
           if (event.message && event.message.includes('ResizeObserver loop completed with undelivered notifications')) {
             event.preventDefault()
@@ -2176,6 +2381,12 @@ export default {
             return false
           }
         })
+      }
+      
+      if (this.dynamicThemeEnabled) {
+        await this.applyDynamicThemeToFrame(mode)
+      } else {
+        this.removeDynamicThemeFromFrame(mode)
       }
       
       if (this.manifest) {
@@ -2244,6 +2455,18 @@ export default {
       if (!frame || !frame.contentWindow) return
       
       try {
+        if (!this.manifest) {
+          this.log(`[${mode.toUpperCase()}] loadControlIntoFrame called before manifest loaded; retrying...`)
+          setTimeout(() => this.loadControlIntoFrame(mode), 150)
+          return
+        }
+        const safeTagName = this.getSafeTagName()
+        if (!safeTagName) {
+          this.log(`[${mode.toUpperCase()}] Invalid or missing tag name: '${this.manifest?.tagName || ''}'`)
+          return
+        }
+        this.log(`[${mode.toUpperCase()}] manifest.tagName='${this.manifest.tagName}', safeTagName='${safeTagName}'`)
+        this.log(`[${mode.toUpperCase()}] safeTagName char codes = ${safeTagName.split('').map(ch => ch.charCodeAt(0)).join(',')}`)
         const frameDoc = frame.contentWindow.document
         const slot = frameDoc.getElementById('slot')
         
@@ -2265,20 +2488,7 @@ export default {
           // Small delay to ensure DOM cleanup is complete before loading new files
           await new Promise(resolve => setTimeout(resolve, 50))
           
-          // Create the control element
-          const controlElement = frameDoc.createElement(this.manifest.tagName)
-          controlElement.setAttribute('data-k2-control', 'true')
-          controlElement.setAttribute('data-design-time', (mode === 'design').toString())
-          
-          slot.appendChild(controlElement)
-          
-          if (mode === 'design') {
-            this.designControlElement = controlElement
-          } else {
-            this.runtimeControlElement = controlElement
-          }
-          
-          // Load scripts and styles based on mode and enabled state
+          // Load scripts and styles FIRST so custom element definitions are available
           const scripts = mode === 'design' 
             ? (this.manifest.designtimeScriptFileNames || [])
             : (this.manifest.runtimeScriptFileNames || [])
@@ -2297,7 +2507,7 @@ export default {
             }
           }
           
-          // Load scripts (only enabled ones)
+          // Load scripts (only enabled ones) - MUST load before creating element
           for (const scriptName of scripts) {
             if (this.loadedScripts.get(scriptName) !== false) {
               await this.injectJS(frame.contentWindow, this.resolve(scriptName))
@@ -2305,6 +2515,76 @@ export default {
             } else {
               this.log(`[${mode.toUpperCase()}] Skipping disabled JS: ${scriptName}`)
             }
+          }
+          
+          // Wait longer and verify custom element is defined in iframe's window context
+          const frameWindow = frame.contentWindow
+          let isCustomElementDefined = false
+          
+          // Poll for custom element definition (up to 1 second)
+          for (let i = 0; i < 20; i++) {
+            await new Promise(resolve => setTimeout(resolve, 50))
+            isCustomElementDefined = frameWindow.customElements && frameWindow.customElements.get(safeTagName)
+            if (isCustomElementDefined) {
+              this.log(`[${mode.toUpperCase()}] Custom element '${safeTagName}' is defined`)
+              break
+            }
+          }
+          
+          if (!isCustomElementDefined) {
+            this.log(`[${mode.toUpperCase()}] Warning: Custom element '${safeTagName}' not defined after waiting, will attempt to create anyway`)
+          }
+          
+          // Create the control element AFTER scripts are loaded and verified
+          let controlElement
+          const tryInnerHTMLCreation = () => {
+            try {
+              const tempDiv = frameDoc.createElement('div')
+              tempDiv.innerHTML = `<${safeTagName}></${safeTagName}>`
+              const created = tempDiv.firstElementChild
+              if (!created || created.tagName.toLowerCase() !== safeTagName.toLowerCase()) {
+                throw new Error('innerHTML approach failed to create element')
+              }
+              tempDiv.removeChild(created)
+              this.log(`[${mode.toUpperCase()}] Created '${safeTagName}' using innerHTML approach`)
+              return created
+            } catch (innerHTMLError) {
+              this.log(`[${mode.toUpperCase()}] innerHTML approach failed: ${innerHTMLError.message}`)
+              return null
+            }
+          }
+          
+          // Prefer innerHTML approach first (most compatible with custom elements)
+          controlElement = tryInnerHTMLCreation()
+
+          // Fallback to createElement only if innerHTML creation failed
+          if (!controlElement) {
+            try {
+              controlElement = frameDoc.createElement(safeTagName)
+              if (!controlElement) {
+                throw new Error('createElement returned null or undefined')
+              }
+            } catch (createError) {
+              this.log(`[${mode.toUpperCase()}] createElement failed for '${safeTagName}': ${createError.message}`)
+              // Last resort: create as div
+              controlElement = frameDoc.createElement('div')
+              controlElement.setAttribute('data-tag-name', safeTagName)
+              this.log(`[${mode.toUpperCase()}] Created fallback div element`)
+            }
+          }
+          
+          // Append to DOM first (before setting attributes) to ensure element is connected
+          slot.appendChild(controlElement)
+          
+          // Now set attributes after element is in DOM
+          // This order can help avoid issues with constructors that check for attributes
+          controlElement.setAttribute('data-k2-control', 'true')
+          controlElement.setAttribute('data-design-time', (mode === 'design').toString())
+          
+          if (mode === 'design') {
+            this.designControlElement = controlElement
+          } else {
+            this.runtimeControlElement = controlElement
           }
           
           // Apply properties AFTER scripts are loaded (dual approach for compatibility)
@@ -2402,6 +2682,9 @@ export default {
       ]
       
       existingLinks.forEach(link => {
+        if (link.dataset && link.dataset.dynamicTheme === 'true') {
+          return
+        }
         const href = link.href
         // Remove if it matches our control files by:
         // 1. URL contains manifestBase or Controls/
@@ -2519,6 +2802,64 @@ export default {
       return absoluteUrl
     },
     
+    clearIconCache() {
+      // Clean up old object URLs before clearing cache
+      if (this._iconUrlCache) {
+        for (const url of this._iconUrlCache.values()) {
+          if (url.startsWith('blob:')) {
+            URL.revokeObjectURL(url)
+          }
+        }
+        this._iconUrlCache.clear()
+      }
+    },
+    
+    resolveIcon(rel) {
+      // Resolve icon without cache-busting to prevent infinite loops in computed properties
+      if (/^https?:\/\//i.test(rel)) return rel
+      
+      // If loading from local files (controlFiles map), use object URLs
+      if (this.controlFiles && this.controlFiles.size > 0) {
+        // Try to find the file in the controlFiles map
+        let file = this.controlFiles.get(rel)
+        
+        if (!file && this.manifestBase !== '.') {
+          const pathWithBase = `${this.manifestBase}/${rel}`.replace(/\/+/g, '/')
+          file = this.controlFiles.get(pathWithBase)
+        }
+        
+        if (!file) {
+          for (const [path, fileObj] of this.controlFiles.entries()) {
+            if (path.endsWith('/' + rel) || path === rel) {
+              file = fileObj
+              break
+            }
+          }
+        }
+        
+        if (file) {
+          // For icons, we can reuse object URLs since they don't change
+          // Check if we already have a cached URL for this file
+          if (!this._iconUrlCache.has(file)) {
+            const objectUrl = URL.createObjectURL(file)
+            this._iconUrlCache.set(file, objectUrl)
+          }
+          return this._iconUrlCache.get(file)
+        }
+      }
+      
+      // Fallback to HTTP URL resolution without cache-busting for icons
+      const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/')
+      const resolved = `${this.manifestBase}/${rel}`.replace(/\/+/g, '/')
+      const url = new URL(resolved, baseUrl)
+      return url.href
+    },
+    
+    handleIconError(event) {
+      // Hide broken icon images
+      event.target.style.display = 'none'
+    },
+    
     async injectCSS(w, url) {
       return new Promise((res, rej) => {
         this.log(`Loading CSS: ${url}`)
@@ -2559,7 +2900,8 @@ export default {
     },
     
     setupEventListeners(mode) {
-      if (!this.manifest || !this.manifest.tagName) return
+      const tagName = this.getSafeTagName()
+      if (!tagName) return
       
       const frame = mode === 'design' ? this.$refs.designFrame : this.$refs.runtimeFrame
       if (!frame || !frame.contentWindow) return
@@ -2570,7 +2912,7 @@ export default {
       this.log(`Setting up event listeners for ${mode}: ${eventIds.join(', ')}`)
       
       try {
-        const control = frame.contentWindow.document.querySelector(this.manifest.tagName)
+        const control = frame.contentWindow.document.querySelector(tagName)
         if (control) {
           eventIds.forEach(eventId => {
             control.addEventListener(eventId, (e) => {
@@ -2601,7 +2943,7 @@ export default {
       const newControlPath = `./Controls/${controlData.controlName}/manifest.json`
       this.selectedExample = newControlPath
       this.manifestPath = newControlPath
-      await this.loadManifest()
+      await this.loadManifest({ controlKey: this.normalizeControlKey(newControlPath) })
       
       this.log(`Auto-selected new control: ${controlData.displayName}`)
     },
@@ -2609,7 +2951,7 @@ export default {
     async loadNewControl(manifestPath) {
       this.manifestPath = manifestPath
       this.selectedExample = manifestPath
-      await this.loadManifest()
+      await this.loadManifest({ controlKey: this.normalizeControlKey(manifestPath) })
     },
     
     // Add polling mechanism as fallback

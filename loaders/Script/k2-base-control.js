@@ -7,38 +7,38 @@ class K2BaseControl extends HTMLElement
     constructor()
     {
         super();
-        
+
         /** @private @type {boolean} Indicates whether the control is connected to the DOM */
         this._isConnected = false;
-        
+
         /** @private @type {boolean} Indicates whether the control has been rendered */
         this._hasRendered = false;
-        
+
         /** @private @type {ShadowRoot|null} The shadow root of the control */
         this._shadow = null;
-        
+
         /** @private @type {string} The name of the control (tag name in lowercase) */
         this._name = this.tagName.toLowerCase();
-        
+
         /** @private @type {string|null} The control type identifier */
         this._controlType = null;
-        
+
         /** @private @type {Object} Dictionary of registered templates keyed by part name */
         this._templates = {};
-        
+
         /** @private @type {string} The current control style identifier */
         this._style = "";
 
         // Initialize script and style file arrays
         /** @private @type {Array<string>} List of design-time JavaScript file names */
         this._designtimeScriptFileNames = [];
-        
+
         /** @private @type {Array<string>} List of runtime JavaScript file names */
         this._runtimeScriptFileNames = [];
-        
+
         /** @private @type {Array<string>} List of design-time CSS file names */
         this._designtimeStyleFileNames = [];
-        
+
         /** @private @type {Array<string>} List of runtime CSS file names */
         this._runtimeStyleFileNames = [];
     }
@@ -182,7 +182,7 @@ class K2BaseControl extends HTMLElement
     }
 
     /**
-     * Gets the control style identifier - not implemented
+     * Gets the control style identifier.
      * This determines which registered style (if any) should be applied to the control.
      * @returns {string} The control style identifier (empty string if no style is set)
      */
@@ -590,6 +590,97 @@ class K2BaseControl extends HTMLElement
             return template; // Fallback to original template
         }
     }
+
+    /**
+     * Get a friendly name for a given file extension
+     * @param {string} fileExtension
+     * @returns {string}
+     */
+    getContentTypeFriendlyName(fileExtension)
+    {
+        const contentTypes = new Map([
+            ['csv', '(Comma Separated Values File)'],
+            ['html', '(HTML Document)'],
+            ['htm', '(HTML Document)'],
+            ['pdf', '(PDF File)'],
+            ['xls', '(Microsoft Office Excel Worksheet)'],
+            ['xlsx', '(Microsoft Office Excel Worksheet)'],
+            ['doc', '(Microsoft Office Word Document)'],
+            ['docx', '(Microsoft Office Word Document)'],
+            ['txt', '(Text Document)'],
+            ['xml', '(XML Document)'],
+            ['ppt', '(Microsoft Office PowerPoint Presentation)'],
+            ['pptx', '(Microsoft Office PowerPoint Presentation)'],
+            ['png', '(PNG Image)'],
+            ['jpg', '(JPEG Image)'],
+            ['jpeg', '(JPEG Image)'],
+            ['gif', '(GIF Image)'],
+            ['bmp', '(Bitmap Image)'],
+            ['zip', '(Compressed Folder)'],
+            ['rar', '(RAR Archive)'],
+            ['7z', '(7-Zip Archive)'],
+            ['mp3', '(MP3 Audio)'],
+            ['mp4', '(MP4 Video)'],
+            ['avi', '(AVI Video)'],
+            ['mov', '(QuickTime Video)'],
+            ['json', '(JSON Document)'],
+            ['js', '(JavaScript File)'],
+            ['css', '(Stylesheet)'],
+            ['ico', '(Icon File)']
+        ]);
+
+        return contentTypes.get(fileExtension.toLowerCase()) || '(File)';
+    }
+
+    uploadFile(id, file)
+    {
+        return new Promise((resolve, reject) =>
+        {
+
+            const fileHandler = document.getElementById("FileHandler");
+            // Prepare headers
+            const settings = { headers: {} };
+
+            const fileExtension = file.name.substring(file.name.lastIndexOf('.') + 1);
+            const friendlyContentTypeName = this.getContentTypeFriendlyName(fileExtension).replace(')', '').replace('(', '');
+
+            // Create FormData and send immediately (no need for FileReader)
+            const formData = new FormData();
+            formData.append('file', file); // This sends the actual file
+            formData.append('fileName', file.name);
+            formData.append('fileSize', file.size.toString());
+            formData.append('mimeType', file.type);
+            formData.append('fileExtension', fileExtension);
+            formData.append('friendlyContentType', friendlyContentTypeName);
+            formData.append('controlId', id);
+
+
+            // Add XSRF token if available
+            if (typeof SourceCode !== 'undefined' &&
+                SourceCode.Forms?.XSRFHelper?.setAntiXSRFTokenInHeaderCollection)
+            {
+                SourceCode.Forms.XSRFHelper.setAntiXSRFTokenInHeaderCollection(settings.headers);
+            }
+
+            // Add anonymous token if available
+            if (this.checkExists(window.__runtimeAnonTokenName) &&
+                this.checkExistsNotEmpty(window.__runtimeAnonToken))
+            {
+                settings.headers[window.__runtimeAnonTokenName] = window.__runtimeAnonToken;
+            }
+
+            fetch(fileHandler.value, {
+                method: 'POST',
+                headers: {
+                    ...settings.headers
+                },
+                body: formData
+            })
+                .then(resolve)
+                .catch(reject);
+        });
+    }
+
 }
 
 // Export for use in other files

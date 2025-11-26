@@ -8,6 +8,25 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function getCaseInsensitiveProperty(obj, propName) {
+    if (!obj || typeof obj !== 'object') {
+        return undefined;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(obj, propName)) {
+        return obj[propName];
+    }
+
+    const target = propName.toLowerCase();
+    for (const key of Object.keys(obj)) {
+        if (key.toLowerCase() === target) {
+            return obj[key];
+        }
+    }
+
+    return undefined;
+}
+
 function findControls() {
     const controlsDir = path.join(__dirname, '..', 'Controls');
     const controls = [];
@@ -40,15 +59,18 @@ function findControls() {
                     const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
                     
                     // Check for required fields
-                    if (manifest.tagName) {
-                        console.log(`Manifest has tagName: ${manifest.tagName}`);
+                    const tagName = getCaseInsensitiveProperty(manifest, 'tagName');
+                    if (tagName) {
+                        console.log(`Manifest has tagName: ${tagName}`);
                         // Check for at least one runtime file
-                        const hasRuntimeFiles = (manifest.runtimeScriptFileNames && manifest.runtimeScriptFileNames.length > 0) ||
-                                             (manifest.runtimeStyleFileNames && manifest.runtimeStyleFileNames.length > 0);
+                        const runtimeScripts = getCaseInsensitiveProperty(manifest, 'runtimeScriptFileNames');
+                        const runtimeStyles = getCaseInsensitiveProperty(manifest, 'runtimeStyleFileNames');
+                        const hasRuntimeFiles = (runtimeScripts && runtimeScripts.length > 0) ||
+                                             (runtimeStyles && runtimeStyles.length > 0);
                         
                         console.log(`Runtime files check: ${hasRuntimeFiles}`);
-                        console.log(`Script files: ${manifest.runtimeScriptFileNames}`);
-                        console.log(`Style files: ${manifest.runtimeStyleFileNames}`);
+                        console.log(`Script files: ${runtimeScripts}`);
+                        console.log(`Style files: ${runtimeStyles}`);
                         
                         if (hasRuntimeFiles) {
                             console.log(`Valid control: ${item}`);

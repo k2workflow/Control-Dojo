@@ -201,12 +201,15 @@ export default {
     },
     
     handleRefreshControls() {
+      // Wait for Inspector component to be mounted and ready before refreshing
       this.$nextTick(() => {
-        // Switch tab to inspector then wait for it to load
+        // If Inspector is not the current tab, switch to it first
         if (this.currentTab !== 'Inspector') {
           this.currentTab = 'Inspector'
+          // Wait again after switching tabs
           this.$nextTick(() => {
             if (this.$refs.inspector) {
+              // Wait a bit more to ensure Inspector is fully loaded
               setTimeout(() => {
                 this.$refs.inspector?.refreshExamples?.()
               }, 100)
@@ -215,6 +218,7 @@ export default {
         } else {
           // Inspector is already the current tab, just refresh
           if (this.$refs.inspector) {
+            // Wait a bit to ensure Inspector is fully loaded
             setTimeout(() => {
               this.$refs.inspector?.refreshExamples?.()
             }, 100)

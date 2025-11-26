@@ -1,7 +1,3 @@
-
-
-//A Springboard implementation of the K2 Controls API (methods custom controls can use)
-//TODO CvG A lot of this is commented out until we are certain they are needed
 class K2ControlsAPI
 {
 
@@ -27,4 +23,5 @@ class K2ControlsAPI
     }
 
 }
+
 if (!window.K2) window.K2 = new K2ControlsAPI();

@@ -12,8 +12,20 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3002;
 
+function writeFilePayload(filePath, payload) {
+    if (payload && typeof payload === 'object' && payload.encoding === 'base64') {
+        const base64Data = payload.data || '';
+        const buffer = Buffer.from(base64Data, 'base64');
+        fs.writeFileSync(filePath, buffer);
+    } else {
+        fs.writeFileSync(filePath, payload || '');
+    }
+}
+
 // Middleware
-app.use(express.json());
+const BODY_LIMIT = '50mb'; // Allow larger payloads for uploaded assets
+app.use(express.json({ limit: BODY_LIMIT }));
+app.use(express.urlencoded({ limit: BODY_LIMIT, extended: true }));
 app.use(express.static('.'));
 
 // Endpoint to run generate_controls_list.js
@@ -88,9 +100,9 @@ app.post('/api/generate-control', (req, res) => {
     fs.mkdirSync(tempDir);
     
     // Write files
-    Object.keys(files).forEach(fileName => {
+    Object.entries(files).forEach(([fileName, fileContent]) => {
         const filePath = path.join(tempDir, fileName);
-        fs.writeFileSync(filePath, files[fileName]);
+        writeFilePayload(filePath, fileContent);
     });
     
     // Create ZIP
@@ -372,9 +384,9 @@ app.post('/api/load-to-workbench', (req, res) => {
         fs.mkdirSync(controlDir);
         
         // Write files to control directory
-        Object.keys(files).forEach(fileName => {
+        Object.entries(files).forEach(([fileName, fileContent]) => {
             const filePath = path.join(controlDir, fileName);
-            fs.writeFileSync(filePath, files[fileName]);
+            writeFilePayload(filePath, fileContent);
         });
         
         // Regenerate controls index

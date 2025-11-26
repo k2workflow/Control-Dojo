@@ -57,7 +57,7 @@
       <h2 class="text-2xl font-bold mb-6" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
         Getting Started
       </h2>
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-4">
         <p class="text-base leading-relaxed mb-4" :class="isDarkMode ? 'text-gray-300' : 'text-gray-700'">
           Ready to start developing custom controls? Navigate to the <a href="#" @click.prevent="switchTab('Inspector')" data-tab-switch="true" class="font-semibold underline transition-colors duration-200" :class="isDarkMode ? 'text-orange-400 hover:text-orange-300' : 'text-blue-600 hover:text-blue-700'">Inspector</a> tab to debug existing controls, or visit <a href="#" @click.prevent="switchTab('Wizard')" data-tab-switch="true" class="font-semibold underline transition-colors duration-200" :class="isDarkMode ? 'text-orange-400 hover:text-orange-300' : 'text-blue-600 hover:text-blue-700'">Control Starter</a> to generate a starter template. Check out the <a href="#" @click.prevent="switchTab('Documents')" data-tab-switch="true" class="font-semibold underline transition-colors duration-200" :class="isDarkMode ? 'text-orange-400 hover:text-orange-300' : 'text-blue-600 hover:text-blue-700'">Documents</a> tab for detailed guides and reference materials.
         </p>
@@ -168,6 +168,18 @@
               <span>Refresh button to reload frames without full page reload</span>
             </li>
           </ul>
+          <div class="mt-4 pt-4 border-t" :class="isDarkMode ? 'border-gray-700' : 'border-gray-200'">
+            <div class="rounded-lg border border-dashed" :class="isDarkMode ? 'border-orange-500/60 bg-orange-900/10' : 'border-blue-200 bg-blue-50'">
+              <div class="px-4 py-3">
+                <h3 class="text-sm font-semibold uppercase tracking-wide mb-2" :class="isDarkMode ? 'text-orange-200' : 'text-blue-700'">
+                  Dynamic Theme Preview
+                </h3>
+                <p class="text-sm leading-snug" :class="isDarkMode ? 'text-orange-100' : 'text-blue-800'">
+                  When enabled, the variables with their default values from the K2 dynamic theme is injected into both design-time and runtime frames so you can test your style-aware controls. Disable it to fall back to each control's internal palette.
+                </p>
+              </div>
+            </div>
+          </div>
         </a>
 
         <!-- Documents Tab -->

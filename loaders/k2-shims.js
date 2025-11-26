@@ -4,7 +4,7 @@ export function installK2Shim(targetWindow, dispatchLog) {
     targetWindow.K2.IsDesigner = targetWindow.__WB_MODE__ === 'design';
 
     targetWindow.K2.RaisePropertyChanged = function (ctrl, propId) {
-        dispatchLog(`[K2] RaisePropertyChanged: ${propId} -> ${ctrl?.[propId] ?? ''}`);
+        //dispatchLog(`[K2] RaisePropertyChanged: ${propId} -> ${ctrl?.[propId] ?? ''}`);
         // Also dispatch a DOM event so the workbench can listen
         const ev = new targetWindow.CustomEvent('k2-prop-changed', { detail: { propId, value: ctrl?.[propId] } });
         targetWindow.dispatchEvent(ev);

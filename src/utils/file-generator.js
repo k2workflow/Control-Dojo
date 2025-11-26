@@ -251,12 +251,17 @@ if (typeof K2 !== 'undefined' && K2.IsDesigner) {
       parameters: method.parameters || []
     }))
 
+    const processedEvents = (controlData.events || []).map(event => ({
+      id: event.id,
+      displayname: event.displayname || event.friendlyname || event.id
+    }))
+
     const manifest = {
       icon: iconName,
       displayName: controlData.displayName,
       tagName: controlData.tagName,
       supports: controlData.standardProperties, // Keep ALL standard properties in supports
-      events: controlData.events,
+      events: processedEvents,
       properties: [...standardOverrides, ...processedCustomProperties], // Add overrides to properties
       methods: processedMethods.length > 0 ? processedMethods : undefined
     }
@@ -297,10 +302,15 @@ if (typeof K2 !== 'undefined' && K2.IsDesigner) {
       files['icon.svg'] = this.getDefaultIconContent()
       // Include attribution README for default icon
       files['ICON_ATTRIBUTION.md'] = this.getIconAttributionContent()
-    } else if (controlData.iconFile) {
-      // Include the uploaded icon file
-      // Note: In a real implementation, you'd need to handle the file content
-      // For now, we'll just reference the filename in the manifest
+    } else if (controlData.iconFile && controlData.iconFileDataUrl) {
+      const parsedIcon = this.extractBase64Data(controlData.iconFileDataUrl)
+      if (parsedIcon) {
+        files[controlData.iconFileName] = {
+          encoding: 'base64',
+          data: parsedIcon.data,
+          mimeType: controlData.iconFileType || parsedIcon.mimeType || ''
+        }
+      }
     }
 
     // Always generate required files - choice is about organization
@@ -373,7 +383,7 @@ if (typeof K2 !== 'undefined' && K2.IsDesigner) {
         return data.events.map(event => {
           return content
             .replace(/\{\{id\}\}/g, event.id)
-            .replace(/\{\{friendlyname\}\}/g, event.friendlyname || event.id)
+            .replace(/\{\{friendlyname\}\}/g, event.displayname || event.friendlyname || event.id)
         }).join('\n')
       })
       
@@ -537,7 +547,7 @@ class ${className} extends HTMLElement {
    * Triggers the ${event.id} event
    * @param {Object} detail - Optional event detail data
    */
-  trigger${event.friendlyname || event.id}(detail = {}) {
+  trigger${event.displayname || event.friendlyname || event.id}(detail = {}) {
     const event = new CustomEvent('${event.id}', {
       detail: { 
         source: '${controlData.tagName}',
@@ -713,5 +723,17 @@ ${controlData.tagName}[data-design-time="true"]::before {
     }
     
     return `<path stroke="currentColor" stroke-width="2" fill="none" d="${paths[iconType] || paths.default}"/>`
+  }
+
+  extractBase64Data(dataUrl) {
+    if (!dataUrl || typeof dataUrl !== 'string') return null
+
+    const matches = dataUrl.match(/^data:(.*?)(;charset=.*?)?;base64,(.*)$/)
+    if (!matches || matches.length < 4) return null
+
+    return {
+      mimeType: matches[1],
+      data: matches[3]
+    }
   }
 }
