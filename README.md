@@ -1,6 +1,7 @@
 # Control Dojo
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Release](https://img.shields.io/github/v/release/k2workflow/Control-Dojo?sort=semver)](https://github.com/k2workflow/Control-Dojo/releases/latest)
 ![Node](https://img.shields.io/badge/node-%3E%3D14-brightgreen)
 
 A modern web-based development environment for Nintex K2 custom controls with both debugging and control generation capabilities.
