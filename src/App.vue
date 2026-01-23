@@ -32,7 +32,7 @@
               <button
                 @click="handleTabClick('Home')"
                 :class="[
-                  'block py-2 pr-4 pl-3 rounded md:p-0 transition-colors duration-200',
+                  'block py-2 pr-4 pl-3 rounded md:p-0 transition-colors duration-200 cursor-pointer',
                   currentTab === 'Home'
                     ? (isDarkMode ? 'text-orange-400' : 'text-blue-700')
                     : (isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-700 hover:text-blue-700')
@@ -46,7 +46,7 @@
               <button
                 @click="handleTabClick('Wizard')"
                 :class="[
-                  'block py-2 pr-4 pl-3 rounded md:p-0 transition-colors duration-200',
+                  'block py-2 pr-4 pl-3 rounded md:p-0 transition-colors duration-200 cursor-pointer',
                   currentTab === 'Wizard'
                     ? (isDarkMode ? 'text-orange-400' : 'text-blue-700')
                     : (isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-700 hover:text-blue-700')
@@ -59,7 +59,7 @@
               <button
                 @click="handleTabClick('Inspector')"
                 :class="[
-                  'block py-2 pr-4 pl-3 rounded md:p-0 transition-colors duration-200',
+                  'block py-2 pr-4 pl-3 rounded md:p-0 transition-colors duration-200 cursor-pointer',
                   currentTab === 'Inspector'
                     ? (isDarkMode ? 'text-orange-400' : 'text-blue-700')
                     : (isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-700 hover:text-blue-700')
@@ -72,7 +72,7 @@
               <button
                 @click="handleTabClick('Documents')"
                 :class="[
-                  'block py-2 pr-4 pl-3 rounded md:p-0 transition-colors duration-200',
+                  'block py-2 pr-4 pl-3 rounded md:p-0 transition-colors duration-200 cursor-pointer',
                   currentTab === 'Documents'
                     ? (isDarkMode ? 'text-orange-400' : 'text-blue-700')
                     : (isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-700 hover:text-blue-700')
@@ -106,7 +106,7 @@
       <Home v-if="currentTab === 'Home'" :isDarkMode="isDarkMode" @switch-tab="handleSwitchTab" />
       <Inspector v-if="currentTab === 'Inspector'" ref="inspector" :isDarkMode="isDarkMode" @control-loaded="handleControlLoaded" @switch-to-inspector="handleSwitchToInspector" />
       <Wizard v-if="currentTab === 'Wizard'" :isDarkMode="isDarkMode" @control-loaded="handleControlLoaded" @switch-to-inspector="handleSwitchToInspector" @refresh-controls="handleRefreshControls" />
-      <Documents v-if="currentTab === 'Documents'" :isDarkMode="isDarkMode" />
+      <Documents v-if="currentTab === 'Documents'" ref="documents" :isDarkMode="isDarkMode" />
     </main>
   </div>
 </template>
@@ -149,11 +149,27 @@ export default {
     }
     this.updateBodyClass()
     
-    // Restore last opened page from localStorage
-    this.restoreLastPage()
+    // Check URL for document path and switch to Documents tab if needed
+    this.checkUrlForDocument()
+    
+    // Restore last opened page from localStorage (only if no document in URL)
+    if (!this.checkUrlForDocument()) {
+      this.restoreLastPage()
+    }
     
     // Additional safety measures for navigation
     this.setupNavigationSafety()
+    
+    // Listen for URL changes (back/forward buttons)
+    this.popstateHandler = () => {
+      this.checkUrlForDocument()
+    }
+    window.addEventListener('popstate', this.popstateHandler)
+  },
+  beforeUnmount() {
+    if (this.popstateHandler) {
+      window.removeEventListener('popstate', this.popstateHandler)
+    }
   },
   methods: {
     toggleDarkMode() {
@@ -229,11 +245,19 @@ export default {
     
     handleSwitchTab(tabName) {
       this.currentTab = tabName
+      // Clear document path from URL if switching away from Documents tab
+      if (tabName !== 'Documents' && window.location.pathname.endsWith('.md')) {
+        history.replaceState(null, '', '/')
+      }
       this.saveCurrentPage()
     },
     
     handleTabClick(tabName) {
       this.currentTab = tabName
+      // Clear document path from URL if switching away from Documents tab
+      if (tabName !== 'Documents' && window.location.pathname.endsWith('.md')) {
+        history.replaceState(null, '', '/')
+      }
       this.saveCurrentPage()
     },
     
@@ -288,22 +312,64 @@ export default {
             const currentUrl = new URL(window.location.href)
             const linkUrl = new URL(link.href)
             
-            // Debug logging for localhost
-            console.log('Control Dojo Navigation Check:', {
-              currentOrigin: currentUrl.origin,
-              linkOrigin: linkUrl.origin,
-              currentPath: currentUrl.pathname,
-              linkPath: linkUrl.pathname,
-              isSameOrigin: currentUrl.origin === linkUrl.origin,
-              isSamePath: currentUrl.pathname === linkUrl.pathname
-            })
-            
-            // Only block if it's the exact same origin and path (same workbench page)
+            // Check if it's the same origin and path
             const isSameOrigin = currentUrl.origin === linkUrl.origin
             const isSamePath = currentUrl.pathname === linkUrl.pathname
             
-            // Allow external links and different pages within the same domain
-            if (isSameOrigin && isSamePath) {
+            // Check if it's a document link (.md file)
+            const isDocumentLink = linkUrl.pathname.endsWith('.md') || linkUrl.pathname.match(/\.md[#?]/)
+            
+            // Handle document links - switch to Documents tab
+            if (isSameOrigin && isDocumentLink) {
+              e.preventDefault()
+              
+              // Switch to Documents tab
+              if (this.currentTab !== 'Documents') {
+                this.currentTab = 'Documents'
+                this.saveCurrentPage()
+              }
+              
+              // Update URL to the document path
+              const newPath = linkUrl.pathname + (linkUrl.hash || '')
+              history.pushState(null, '', newPath)
+              
+              // Let Documents component handle the document selection
+              // Wait for Documents component to be mounted and loaded
+              this.$nextTick(() => {
+                // Wait for Documents component to be ready and documents to be loaded
+                const checkAndUpdate = () => {
+                  if (this.$refs.documents) {
+                    // If documents are loaded, read URL immediately
+                    if (this.$refs.documents.documents && this.$refs.documents.documents.length > 0) {
+                      if (this.$refs.documents.readUrlForDocument) {
+                        this.$refs.documents.readUrlForDocument()
+                      }
+                    } else {
+                      // Documents not loaded yet, check again in 50ms
+                      setTimeout(checkAndUpdate, 50)
+                    }
+                  } else {
+                    // Component not mounted yet, check again in 50ms
+                    setTimeout(checkAndUpdate, 50)
+                  }
+                }
+                // Start checking after a short delay
+                setTimeout(checkAndUpdate, 50)
+              })
+              
+              return false
+            }
+            
+            // Only block if it's the exact same origin, path, AND hash (or both have no hash)
+            // This allows:
+            // - Anchor links (different hash fragments) - documentation navigation
+            // - Relative links to different files (different paths) - documentation file links
+            const currentHash = currentUrl.hash || ''
+            const linkHash = linkUrl.hash || ''
+            const isSameHash = currentHash === linkHash
+            
+            // Block only if same origin, same path, AND same hash (or both empty)
+            if (isSameOrigin && isSamePath && isSameHash) {
               e.preventDefault()
               console.warn('Control Dojo: Prevented navigation to same page to avoid duplication')
               
@@ -314,7 +380,6 @@ export default {
             
             // For external links (different origin), ensure they open in new tab
             if (!isSameOrigin) {
-              console.log('Control Dojo: External link detected, ensuring new tab:', linkUrl.href)
               if (!link.target) {
                 link.target = '_blank'
                 link.rel = 'noopener noreferrer'
@@ -384,6 +449,32 @@ export default {
           warning.parentNode.removeChild(warning)
         }
       }, 3000)
+    },
+    
+    checkUrlForDocument() {
+      try {
+        const pathname = window.location.pathname
+        // Check if URL contains a .md file
+        if (pathname && pathname !== '/' && pathname !== '/index.html' && pathname.endsWith('.md')) {
+          // Switch to Documents tab if not already there
+          if (this.currentTab !== 'Documents') {
+            this.currentTab = 'Documents'
+            this.saveCurrentPage()
+          }
+          return true
+        }
+        // If URL is root or doesn't have .md, clear any document path from URL
+        if (pathname === '/' || pathname === '/index.html') {
+          // Ensure we're not on a document path
+          if (window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
+            history.replaceState(null, '', '/')
+          }
+        }
+        return false
+      } catch (error) {
+        console.warn('Error checking URL for document:', error)
+        return false
+      }
     }
   }
 }

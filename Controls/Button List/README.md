@@ -46,7 +46,7 @@ Button List/
 |----------|------|---------|-------------|
 | **Value** | String | `null` | The value of the currently selected button. Updates automatically when a button is clicked. |
 | **List** | ListData | `[]` | Array of button items. Each item should have `display`, `value`, and optionally `icon` fields. Supports both static JSON and SmartObject binding. |
-| **MaxItems** | String | `"0"` | Maximum number of items to display (0 = unlimited). Accepts numeric values as strings. |
+| **MaxItems** | Int | `0` | Maximum number of items to display (0 = unlimited). Uses `int` type with built-in range validation plus a custom regex to enforce zero or positive integers. |
 | **ButtonLayout** | String | `"horizontal"` | Layout mode: `"horizontal"`, `"vertical"`, or `"grid"` |
 | **ButtonSize** | String | `"medium"` | Button size: `"small"`, `"medium"`, or `"large"` |
 | **ButtonStyle** | String | `"normal"` | Button style matching K2 button control styles: `"normal"`, `"main"`, `"quiet"`, or `"destructive"` |
@@ -78,7 +78,7 @@ All properties support the following fields:
 |-------|------|----------|-------------|
 | `id` | String | Yes | Unique property identifier (used in code) |
 | `friendlyname` | String | Yes | Human-readable name shown in property panel |
-| `type` | String | Yes | Property data type: `"string"`, `"bool"`, `"text"`, `"listdata"` |
+| `type` | String | Yes | Property data type: `"string"`, `"bool"`, `"int"`, `"text"`, `"listdata"` |
 | `initialvalue` | String | Yes | Default value for the property |
 | `refreshdisplay` | String | Yes | Whether changes trigger display refresh (`"true"` or `"false"`) |
 | `changesdisplay` | Boolean | Yes | Whether changes affect visual appearance |
@@ -86,12 +86,19 @@ All properties support the following fields:
 | `description` | String | No | Property description/tooltip shown in designer |
 | `category` | String | No | Property category for grouping (e.g., `"Detail"` for data properties) |
 
+### Design-time validation
+
+- `MaxItems` now uses the new `int` property type. The default `int` validation blocks non-numeric values and values outside the 32-bit range.
+- Custom validation is configured with `validationpattern` and `validationmessage`. For `MaxItems`, the pattern `^0$|^[1-9]\\d*$` enforces zero or positive integers and the message `Must be zero or a positive integer.` is displayed when validation fails.
+- If you set only a pattern or only a message, the missing piece falls back to the default `int` behavior.
+
 ## Events
 
 | Event | Description |
 |-------|-------------|
 | **OnChanged** (friendly name: "Changed") | Fired when a button is clicked and the Value property changes. Contains the new value, old value, and selected item. **Use this event to transfer the selected value to other controls.** |
-| **OnButtonClick** (friendly name: "Button Clicked") | Fired when any button is clicked. Contains the button item details (display, value, index) and previous selection state. |
+| **OnButtonClick** (friendly name: "Clicked") | Fired when any button is clicked. Contains the button item details (display, value, index) and previous selection state. |
+| **Rendered** | Fired when the control finishes initial rendering. Indicates the control is ready for interaction. |
 
 ## List Data Structure
 
@@ -148,9 +155,31 @@ When binding to a SmartObject:
 | Method | Description | Parameters | Return Type |
 |--------|-------------|------------|-------------|
 | **clearSelection** | Clears the current selection | None | None |
-| **selectById** | Selects a button by its ID (value property) | `id` (String) | None |
-| **selectByText** | Selects a button by its display text | `text` (String) | None |
+| **selectById** | Selects a button by its ID (value property). Also accepts `selectByValue` as an alias. | `id` (String) - The value property of the button to select | None |
+| **selectByText** | Selects a button by its display text. Also accepts `selectByIndex` as an alias (for backward compatibility, but now selects by text, not index). | `text` (String) - The display text of the button to select | None |
 | **refresh** | Forces a re-render of the control | None | None |
+
+### Method Execution via K2 Rules
+
+Methods can be called via K2 rules using the `execute` method:
+
+```javascript
+// Clear selection
+control.execute({ methodName: "clearSelection" });
+
+// Select by ID/value
+control.execute({ methodName: "selectById", value: "1" });
+// or
+control.execute({ methodName: "selectByValue", value: "1" });
+
+// Select by text
+control.execute({ methodName: "selectByText", text: "Home" });
+// or (backward compatibility)
+control.execute({ methodName: "selectByIndex", index: "Home" });
+
+// Refresh
+control.execute({ methodName: "refresh" });
+```
 
 ### Method Examples
 

@@ -34,6 +34,13 @@ A customizable CAPTCHA box for Control Dojo that provides bot protection using o
 | `ErrorMessage` | String | `""` | Message shown on verification failure (localized) |
 | `AutoRefresh` | Boolean | `true` | Whether to automatically refresh CAPTCHA on verification failure |
 | `Theme` | String | `"light"` | Visual theme (`"light"` or `"dark"`) |
+| `Tooltip` | String | `""` | Custom tooltip text for the input field (programmatic access only) |
+| `TabIndex` | String | `"0"` | Tab order index for keyboard navigation (programmatic access only) |
+| `AccessibilityText` | String | `""` | Accessibility text for screen readers (programmatic access only) |
+| `ControlStyle` | String | `""` | Control style template (programmatic access only) |
+| `Enabled` | String | `"true"` | Legacy property for enabled state (programmatic access only, use `IsEnabled` instead) |
+| `ReadOnly` | String | `"false"` | Legacy property for read-only state (programmatic access only, use `IsReadOnly` instead) |
+| `Format` | String | `""` | Format property (programmatic access only) |
 
 ### Standard K2 Control Properties
 
@@ -55,6 +62,7 @@ A customizable CAPTCHA box for Control Dojo that provides bot protection using o
 | `OnEnter` | Fired when the user presses Enter in the input field |
 | `Verified` | Fired when CAPTCHA verification is successful |
 | `VerificationFailed` | Fired when CAPTCHA verification fails |
+| `Rendered` | Fired when the control finishes initial rendering |
 
 ## Methods
 

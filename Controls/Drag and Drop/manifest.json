@@ -91,7 +91,7 @@
       "type": "text",
       "refreshdisplay": "true",
       "inputlength": "50",
-      "initialvalue": "70px"
+      "initialvalue": "56px"
     },
     {
       "id": "Value",

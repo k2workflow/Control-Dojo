@@ -632,6 +632,12 @@ class K2BaseControl extends HTMLElement
         return contentTypes.get(fileExtension.toLowerCase()) || '(File)';
     }
 
+    /**
+     * Upload a file using the FileHandler endpoint stored in the FileHandler hidden input
+     * @param {any} id
+     * @param {any} file
+     * @returns {Promise<Response>} Promise resolving to the fetch Response object
+     */
     uploadFile(id, file)
     {
         return new Promise((resolve, reject) =>
@@ -681,6 +687,58 @@ class K2BaseControl extends HTMLElement
         });
     }
 
+    /**
+     * Handle click on file control for downloading files.
+     * Supports both single-file and multi-file controls.
+     * @param {Event} e - The click event
+     * @param {Object} [fileInfo] - Optional file info object for multi-file controls
+     */
+    downloadFile(e, fileInfo)
+    {
+        // For multi-file controls, fileInfo contains { filePath, fileName, fileDataURL, fileRequestData }
+        // For single-file controls, use existing _fileInfoObj
+        const file = fileInfo || this._fileInfoObj;
+
+        // Check if control has download capability
+        const hasFile = fileInfo && (fileInfo.filePath || fileInfo.fileDataURL);
+
+        if (hasFile)
+        {
+            //Download file
+            e.stopPropagation();
+            e.preventDefault();
+
+            const isNullOrEmtpy = (val) => val !== undefined && val !== null && val !== '';
+
+            if (isNullOrEmtpy(file.fileDataURL))
+            {
+                // Download from data URL
+                // Fallback: create download link
+                const link = document.createElement('a');
+                link.href = file.fileDataURL;
+                link.download = file.fileName || 'download';
+                link.click();
+            }
+            else if (isNullOrEmtpy(file.filePath) && file.filePath.indexOf(document.getElementById("FileURL")?.value || '') === -1)
+            {
+                // Download from server path
+                if (typeof openFile !== 'undefined')
+                {
+                    openFile(file.filePath, "Path", "file", null, null, null, file.fileRequestData);
+                } else
+                {
+                    // Fallback: open in new window
+                    window.open(file.filePath, '_blank');
+                }
+            }
+            else if (typeof openFile !== 'undefined')
+            {
+                openFile(this.id || this._id, "Control", "file");
+            }
+
+            return false;
+        }
+    }
 }
 
 // Export for use in other files

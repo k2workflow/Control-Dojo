@@ -32,9 +32,9 @@
               <button
                 v-for="doc in startHereDocs"
                 :key="doc.index"
-                @click="selectedDocument = doc.index"
+                @click="selectDocument(doc.index, doc.filename)"
                 :class="[
-                  'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                  'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer',
                   selectedDocument === doc.index
                     ? (isDarkMode 
                         ? 'bg-orange-600 text-white' 
@@ -61,9 +61,9 @@
               <button
                 v-for="doc in coreDocs"
                 :key="doc.index"
-                @click="selectedDocument = doc.index"
+                @click="selectDocument(doc.index, doc.filename)"
                 :class="[
-                  'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                  'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer',
                   selectedDocument === doc.index
                     ? (isDarkMode 
                         ? 'bg-orange-600 text-white' 
@@ -90,9 +90,9 @@
               <button
                 v-for="doc in advancedDocs"
                 :key="doc.index"
-                @click="selectedDocument = doc.index"
+                @click="selectDocument(doc.index, doc.filename)"
                 :class="[
-                  'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                  'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer',
                   selectedDocument === doc.index
                     ? (isDarkMode 
                         ? 'bg-orange-600 text-white' 
@@ -119,7 +119,7 @@
             </div>
           </div>
           
-          <div v-else-if="error" class="mb-6 p-4 border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 rounded-lg shadow-sm">
+          <div v-else-if="error" :class="['mb-6 p-4 border rounded-lg shadow-sm', isDarkMode ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200']">
             <div class="flex items-start">
               <div class="flex-shrink-0">
                 <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -127,8 +127,8 @@
                 </svg>
               </div>
               <div class="ml-3 flex-1">
-                <h3 class="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">Error Loading Documents</h3>
-                <p class="text-sm text-red-700 dark:text-red-300 mb-4">{{ error }}</p>
+                <h3 :class="['text-lg font-semibold mb-2', isDarkMode ? 'text-red-200' : 'text-red-800']">Error Loading Documents</h3>
+                <p :class="['text-sm mb-4', isDarkMode ? 'text-red-300' : 'text-red-700']">{{ error }}</p>
                 <button 
                   @click="loadDocuments" 
                   :class="[
@@ -194,7 +194,7 @@ export default {
       // Overview and Getting Started - maintain order
       const startHereOrder = ['Overview.md', 'Getting Started.md']
       return this.documents
-        .map((doc, index) => ({ ...doc, index }))
+        .map((doc, originalIndex) => ({ ...doc, index: originalIndex }))
         .filter((doc) => startHereOrder.includes(doc.filename))
         .sort((a, b) => {
           const indexA = startHereOrder.indexOf(a.filename)
@@ -212,7 +212,7 @@ export default {
         'Responsive Controls.md'
       ]
       return this.documents
-        .map((doc, index) => ({ ...doc, index }))
+        .map((doc, originalIndex) => ({ ...doc, index: originalIndex }))
         .filter((doc) => coreOrder.includes(doc.filename))
         .sort((a, b) => {
           const indexA = coreOrder.indexOf(a.filename)
@@ -229,7 +229,7 @@ export default {
         'Localization.md'
       ]
       return this.documents
-        .map((doc, index) => ({ ...doc, index }))
+        .map((doc, originalIndex) => ({ ...doc, index: originalIndex }))
         .filter((doc) => advancedOrder.includes(doc.filename))
         .sort((a, b) => {
           const indexA = advancedOrder.indexOf(a.filename)
@@ -238,9 +238,37 @@ export default {
         })
     }
   },
+  watch: {
+    // Watch for URL changes when component is already mounted
+    '$route'(to, from) {
+      // Vue router not used, but we can watch window.location
+    },
+    selectedDocument(newIndex, oldIndex) {
+      // Document selection changed
+    }
+  },
   mounted() {
     this.initializeMarkdown()
     this.loadDocuments()
+    this.setupLinkHandling()
+    // Read URL after a short delay to ensure documents are loaded
+    this.$nextTick(() => {
+      // If documents are already loaded, read URL immediately
+      if (this.documents.length > 0) {
+        this.readUrlForDocument()
+      }
+      // Otherwise, readUrlForDocument will be called after loadDocuments completes
+    })
+    // Listen for URL changes (back/forward buttons)
+    this.popstateHandler = () => {
+      this.readUrlForDocument()
+    }
+    window.addEventListener('popstate', this.popstateHandler)
+  },
+  beforeUnmount() {
+    if (this.popstateHandler) {
+      window.removeEventListener('popstate', this.popstateHandler)
+    }
   },
   methods: {
     initializeMarkdown() {
@@ -293,7 +321,6 @@ export default {
       this.error = null
       
       try {
-        console.log('Loading documents from /api/docs...')
         const response = await fetch('/api/docs')
         
         if (!response.ok) {
@@ -301,10 +328,8 @@ export default {
         }
         
         const docList = await response.json()
-        console.log('Document list received:', docList)
         
         if (!Array.isArray(docList) || docList.length === 0) {
-          console.warn('No documents found in docs folder')
           this.documents = []
           return
         }
@@ -313,7 +338,6 @@ export default {
         const documents = await Promise.all(
           docList.map(async (doc) => {
             try {
-              console.log(`Loading content for ${doc.filename}...`)
               const contentResponse = await fetch(`/api/docs/${doc.filename}`)
               
               if (!contentResponse.ok) {
@@ -321,7 +345,6 @@ export default {
               }
               
               const content = await contentResponse.text()
-              console.log(`Content loaded for ${doc.filename}: ${content.length} characters`)
               
               return {
                 filename: doc.filename,
@@ -329,7 +352,6 @@ export default {
                 content
               }
             } catch (error) {
-              console.error(`Error loading ${doc.filename}:`, error)
               return {
                 filename: doc.filename,
                 title: doc.title,
@@ -340,8 +362,23 @@ export default {
         )
         
         this.documents = documents
-        this.selectedDocument = 0 // Start with Overview
-        console.log(`Successfully loaded ${documents.length} documents`)
+        
+        // Try to read document from URL, otherwise default to Overview
+        const urlDocIndex = this.getDocumentFromUrl()
+        if (urlDocIndex === null) {
+          // Check if we're on root - if so, default to Overview
+          const pathname = window.location.pathname
+          if (!pathname || pathname === '/' || pathname === '/index.html') {
+            this.selectedDocument = 0 // Start with Overview if on root
+          }
+        }
+        
+        // Handle hash fragment for scrolling
+        if (window.location.hash) {
+          this.$nextTick(() => {
+            this.scrollToHash(window.location.hash)
+          })
+        }
       } catch (error) {
         console.error('Error loading documents:', error)
         this.error = error.message
@@ -353,15 +390,12 @@ export default {
     
     parseMarkdown(text) {
       if (!text || !this.md) {
-        console.warn('parseMarkdown called with empty text or uninitialized markdown parser')
         return ''
       }
       
       try {
-        console.log('Parsing markdown content...')
         // Parse markdown to HTML
         const html = this.md.render(text)
-        console.log('Markdown parsed to HTML:', html.length, 'characters')
         
         // Sanitize HTML for security
         const sanitizedHtml = DOMPurify.sanitize(html, {
@@ -370,16 +404,14 @@ export default {
           ADD_ATTR: ['target', 'rel']
         })
         
-        console.log('HTML sanitized successfully')
-        
         // Apply syntax highlighting after DOM is updated
         this.$nextTick(() => {
           this.applySyntaxHighlighting()
+          // Link handling is set up once in mounted() using event delegation
         })
         
         return sanitizedHtml
       } catch (error) {
-        console.error('Error parsing markdown:', error)
         return `<div class="error">Error parsing markdown: ${error.message}</div>`
       }
     },
@@ -395,17 +427,192 @@ export default {
           
           // Additional safety check to prevent highlighting already processed content
           if (block.innerHTML.includes('<span class="hljs')) {
-            console.warn('Skipping already highlighted block')
             return
           }
           
           hljs.highlightElement(block)
         } catch (error) {
-          console.warn('Syntax highlighting error:', error)
           // Remove the marker if highlighting failed
           block.removeAttribute('data-highlighted')
         }
       })
+    },
+    
+    setupLinkHandling() {
+      // Intercept clicks on markdown links within the content area
+      // Use event delegation on the main container to avoid issues with Vue updating the DOM
+      const mainContainer = this.$el?.querySelector('main')
+      if (!mainContainer) return
+      
+      // Remove any existing listener by checking if we've already added one
+      if (mainContainer.hasAttribute('data-link-handler-attached')) {
+        return // Already has handler attached
+      }
+      
+      // Mark that we've attached the handler
+      mainContainer.setAttribute('data-link-handler-attached', 'true')
+      
+      // Use event delegation - listen on main container, but only handle clicks on .markdown-content links
+      mainContainer.addEventListener('click', (e) => {
+        // Only handle clicks within markdown content
+        const contentArea = e.target.closest('.markdown-content')
+        if (!contentArea) return
+        
+        const link = e.target.closest('a')
+        if (!link || !link.href) return
+        
+        try {
+          const linkUrl = new URL(link.href, window.location.href)
+          const currentUrl = new URL(window.location.href)
+          
+          // Handle relative .md file links
+          if (linkUrl.origin === currentUrl.origin) {
+            const pathname = linkUrl.pathname
+            // Check if it's a .md file link
+            if (pathname.endsWith('.md') || pathname.match(/\.md[#?]/)) {
+              e.preventDefault()
+              
+              // Extract filename from path
+              const filename = decodeURIComponent(pathname.split('/').pop().split('#')[0].split('?')[0])
+              
+              // Find document index by filename
+              const docIndex = this.findDocumentIndexByFilename(filename)
+              if (docIndex !== -1) {
+                this.selectedDocument = docIndex
+                // Update URL without hash first, then add hash if present
+                const newPath = `/${encodeURIComponent(filename)}`
+                const hash = linkUrl.hash || ''
+                history.pushState(null, '', newPath + hash)
+                
+                // Scroll to hash target if present
+                if (hash) {
+                  this.$nextTick(() => {
+                    this.scrollToHash(hash)
+                  })
+                }
+              }
+              return false
+            }
+            
+            // Handle anchor links (hash fragments) within the same document
+            if (linkUrl.pathname === currentUrl.pathname && linkUrl.hash) {
+              e.preventDefault()
+              this.scrollToHash(linkUrl.hash)
+              history.pushState(null, '', linkUrl.href)
+              return false
+            }
+          }
+        } catch (error) {
+          // Allow default behavior if parsing fails
+        }
+      })
+    },
+    
+    findDocumentIndexByFilename(filename) {
+      // Try exact match first
+      let index = this.documents.findIndex(doc => doc.filename === filename)
+      if (index !== -1) return index
+      
+      // Try with .md extension if not present
+      if (!filename.endsWith('.md')) {
+        index = this.documents.findIndex(doc => doc.filename === `${filename}.md`)
+        if (index !== -1) return index
+      }
+      
+      // Try without .md extension
+      const nameWithoutExt = filename.replace(/\.md$/, '')
+      index = this.documents.findIndex(doc => doc.filename.replace(/\.md$/, '') === nameWithoutExt)
+      if (index !== -1) return index
+      
+      return -1
+    },
+    
+    getDocumentFromUrl() {
+      try {
+        const pathname = window.location.pathname
+        if (!pathname || pathname === '/' || pathname === '/index.html') {
+          return null
+        }
+        
+        // Extract filename from path
+        const filename = decodeURIComponent(pathname.split('/').pop().split('#')[0].split('?')[0])
+        if (!filename || !filename.endsWith('.md')) {
+          return null
+        }
+        
+        const docIndex = this.findDocumentIndexByFilename(filename)
+        
+        if (docIndex !== -1) {
+          this.selectedDocument = docIndex
+          return docIndex
+        }
+      } catch (error) {
+        // Error reading URL, return null
+      }
+      return null
+    },
+    
+    readUrlForDocument() {
+      if (this.documents.length === 0) {
+        // Documents not loaded yet, will be called again after load
+        return
+      }
+      
+      const docIndex = this.getDocumentFromUrl()
+      if (docIndex === null && window.location.pathname === '/' || window.location.pathname === '/index.html') {
+        // Default to Overview if on root
+        this.selectedDocument = 0
+      }
+      
+      // Handle hash fragment for scrolling
+      if (window.location.hash) {
+        this.$nextTick(() => {
+          this.scrollToHash(window.location.hash)
+        })
+      }
+    },
+    
+    scrollToHash(hash) {
+      if (!hash) return
+      
+      // Remove the # from hash
+      const id = hash.substring(1)
+      if (!id) return
+      
+      // Try to find element by ID
+      let element = document.getElementById(id)
+      if (!element) {
+        // Try to find by name attribute (for anchor tags)
+        element = document.querySelector(`a[name="${id}"]`)
+      }
+      if (!element) {
+        // Try to find heading with matching text (convert kebab-case to title case)
+        const headingText = id.split('-').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ')
+        const headings = document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3, .markdown-content h4, .markdown-content h5, .markdown-content h6')
+        for (const heading of headings) {
+          if (heading.textContent.trim().toLowerCase().includes(headingText.toLowerCase())) {
+            element = heading
+            break
+          }
+        }
+      }
+      
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    },
+    
+    selectDocument(index, filename) {
+      // Ensure index is valid
+      if (index >= 0 && index < this.documents.length) {
+        this.selectedDocument = index
+        
+        // Update URL to reflect selected document
+        const encodedFilename = encodeURIComponent(filename)
+        history.pushState(null, '', `/${encodedFilename}`)
+      }
     }
   }
 }

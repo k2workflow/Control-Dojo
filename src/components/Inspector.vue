@@ -122,6 +122,28 @@
 
       <!-- Scrollable Content Area -->
       <div class="flex-1 overflow-y-auto">
+        <!-- Data Types Section -->
+        <div v-if="manifest && manifest.datatypes && manifest.datatypes.length > 0" :class="['border-b transition-colors duration-200', isDarkMode ? 'border-dark-600' : 'border-slate-200']">
+          <div class="p-4">
+            <div class="flex items-center space-x-2 mb-2">
+              <h3 :class="['text-sm font-semibold transition-colors duration-200', isDarkMode ? 'text-dark-100' : 'text-gray-900']">
+                Supported Data Types in K2
+              </h3>
+            </div>
+            <p :class="['text-xs mb-2 transition-colors duration-200', isDarkMode ? 'text-dark-300' : 'text-slate-600']">
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="(datatype, index) in manifest.datatypes"
+                :key="index"
+                :class="['inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium transition-colors duration-200', isDarkMode ? 'bg-orange-900/50 text-orange-300 border border-orange-700' : 'bg-blue-100 text-blue-700 border border-blue-300']"
+              >
+                {{ datatype }}
+              </span>
+            </div>
+          </div>
+        </div>
+        
         <!-- Properties Section -->
         <div :class="['border-b transition-colors duration-200', isDarkMode ? 'border-dark-600' : 'border-slate-200']">
           <button
@@ -221,23 +243,95 @@
                       </select>
                     </div>
                     
-                    <!-- Text properties (text inputs and textareas) -->
+                    <!-- TabIndex helper -->
+                    <div v-else-if="isTabIndexProperty(prop)" class="space-y-1">
+                      <div class="flex items-stretch space-x-2">
+                        <input
+                          v-model="propValues[prop.id]"
+                          :type="getPropertyInputType(prop)"
+                          :placeholder="prop.description || prop.initialvalue || ''"
+                          v-bind="getPropertyInputAttrs(prop)"
+                          :class="['flex-1 px-3 py-2 border rounded-md transition-colors duration-200', isDarkMode ? 'bg-dark-700 border-dark-600 text-dark-100 placeholder-dark-400 focus:border-orange-500 focus:ring-orange-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-500 focus:border-primary-500 focus:ring-primary-500']"
+                          @input="updateProperty(prop.id, $event.target.value)"
+                        />
+                        <div :class="['flex flex-col border rounded-md overflow-hidden', isDarkMode ? 'border-dark-600' : 'border-slate-300']">
+                          <button
+                            type="button"
+                            :class="['px-2 py-1 text-xs font-semibold transition-colors duration-150', isDarkMode ? 'bg-dark-600 text-dark-100 hover:bg-dark-500' : 'bg-slate-100 text-slate-700 hover:bg-slate-200']"
+                            @click="adjustTabIndex(prop.id, 1)"
+                            title="Increase tab index"
+                          >
+                            +
+                          </button>
+                          <button
+                            type="button"
+                            :class="['px-2 py-1 text-xs font-semibold border-t transition-colors duration-150', isDarkMode ? 'border-dark-700 bg-dark-600 text-dark-100 hover:bg-dark-500' : 'border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200']"
+                            @click="adjustTabIndex(prop.id, -1)"
+                            title="Decrease tab index"
+                          >
+                            -
+                          </button>
+                        </div>
+                      </div>
+                      <p :class="['text-xs transition-colors duration-200', isDarkMode ? 'text-dark-300' : 'text-slate-500']">
+                        {{ getTabIndexDisplay(propValues[prop.id]) }}
+                      </p>
+                    </div>
+                    
+                    <!-- TabIndex helper -->
+                    <div v-else-if="isTabIndexProperty(prop)" class="space-y-1">
+                      <div class="flex items-stretch space-x-2">
+                        <input
+                          v-model="propValues[prop.id]"
+                          :type="getPropertyInputType(prop)"
+                          :placeholder="prop.description || prop.initialvalue || ''"
+                          v-bind="getPropertyInputAttrs(prop)"
+                          :class="['flex-1 px-3 py-2 border rounded-md transition-colors duration-200', isDarkMode ? 'bg-dark-700 border-dark-600 text-dark-100 placeholder-dark-400 focus:border-orange-500 focus:ring-orange-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-500 focus:border-orange-500 focus:ring-orange-500']"
+                          @input="updateProperty(prop.id, $event.target.value)"
+                        />
+                        <div :class="['flex flex-col border rounded-md overflow-hidden', isDarkMode ? 'border-dark-600' : 'border-slate-300']">
+                          <button
+                            type="button"
+                            :class="['px-2 py-1 text-xs font-semibold transition-colors duration-150', isDarkMode ? 'bg-dark-600 text-dark-100 hover:bg-dark-500' : 'bg-slate-100 text-slate-700 hover:bg-slate-200']"
+                            @click="adjustTabIndex(prop.id, 1)"
+                            title="Increase tab index"
+                          >
+                            +
+                          </button>
+                          <button
+                            type="button"
+                            :class="['px-2 py-1 text-xs font-semibold border-t transition-colors duration-150', isDarkMode ? 'border-dark-700 bg-dark-600 text-dark-100 hover:bg-dark-500' : 'border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200']"
+                            @click="adjustTabIndex(prop.id, -1)"
+                            title="Decrease tab index"
+                          >
+                            -
+                          </button>
+                        </div>
+                      </div>
+                      <p :class="['text-xs transition-colors duration-200', isDarkMode ? 'text-dark-300' : 'text-slate-500']">
+                        {{ getTabIndexDisplay(propValues[prop.id]) }}
+                      </p>
+                    </div>
+                    
+                    <!-- Text/number properties (text inputs and textareas) -->
                     <div v-else>
                       <input
-                        v-if="getPropertyInputType(prop) === 'text'"
+                        v-if="getPropertyInputType(prop) !== 'textarea'"
                         v-model="propValues[prop.id]"
-                        type="text"
+                        :type="getPropertyInputType(prop)"
                         :placeholder="prop.description || prop.initialvalue || ''"
+                        v-bind="getPropertyInputAttrs(prop)"
                         :class="['w-full px-3 py-2 border rounded-md transition-colors duration-200', isDarkMode ? 'bg-dark-700 border-dark-600 text-dark-100 placeholder-dark-400 focus:border-orange-500 focus:ring-orange-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-500 focus:border-primary-500 focus:ring-primary-500']"
-                        @input="updateProperty(prop.id, $event.target.value)"
+                        @blur="updateProperty(prop.id, $event.target.value)"
+                        @change="updateProperty(prop.id, $event.target.value)"
                       />
                       <textarea
-                        v-else-if="getPropertyInputType(prop) === 'textarea'"
+                        v-else
                         v-model="propValues[prop.id]"
                         :placeholder="prop.description || prop.initialvalue || ''"
                         :rows="3"
                         :class="['w-full px-3 py-2 border rounded-md transition-colors duration-200', isDarkMode ? 'bg-dark-700 border-dark-600 text-dark-100 placeholder-dark-400 focus:border-orange-500 focus:ring-orange-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-500 focus:border-primary-500 focus:ring-primary-500']"
-                        @input="updateProperty(prop.id, $event.target.value)"
+                        @blur="updateProperty(prop.id, $event.target.value)"
                       ></textarea>
                     </div>
                   </div>
@@ -324,18 +418,19 @@
                       </select>
                     </div>
                     
-                    <!-- Text properties (text inputs and textareas) -->
+                    <!-- Text/number properties (text inputs and textareas) -->
                     <div v-else>
                       <input
-                        v-if="getPropertyInputType(prop) === 'text'"
+                        v-if="getPropertyInputType(prop) !== 'textarea'"
                         v-model="propValues[prop.id]"
-                        type="text"
+                        :type="getPropertyInputType(prop)"
                         :placeholder="prop.description || prop.initialvalue || ''"
+                        v-bind="getPropertyInputAttrs(prop)"
                         :class="['w-full px-3 py-2 border rounded-md transition-colors duration-200', isDarkMode ? 'bg-dark-700 border-dark-600 text-dark-100 placeholder-dark-400 focus:border-orange-500 focus:ring-orange-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-500 focus:border-orange-500 focus:ring-orange-500']"
                         @input="updateProperty(prop.id, $event.target.value)"
                       />
                       <textarea
-                        v-else-if="getPropertyInputType(prop) === 'textarea'"
+                        v-else
                         v-model="propValues[prop.id]"
                         :placeholder="prop.description || prop.initialvalue || ''"
                         :rows="3"
@@ -713,7 +808,7 @@
           
           <!-- Console Content -->
           <div v-show="!consoleCollapsed" class="h-full overflow-y-auto font-mono text-sm p-4" style="padding-bottom: 1rem;">
-            <div v-for="(log, index) in [...filteredConsoleLogs].reverse()" :key="filteredConsoleLogs.length - index - 1" :class="['mb-1 transition-colors duration-200', log.color || (isDarkMode ? 'text-green-400' : 'text-green-600')]">
+            <div v-for="(log, index) in [...filteredConsoleLogs].reverse()" :key="filteredConsoleLogs.length - index - 1" :class="['mb-1 transition-colors duration-200', getLevelColor(log.level || 'log')]">
               {{ typeof log === 'string' ? log : log.message }}
             </div>
             <!-- Single spacer at bottom for visual separation -->
@@ -863,7 +958,7 @@
         
         <!-- Console Content -->
         <div v-show="!consoleCollapsed" class="h-full overflow-y-auto font-mono text-sm p-4" style="padding-bottom: 1rem;">
-          <div v-for="(log, index) in [...filteredConsoleLogs].reverse()" :key="filteredConsoleLogs.length - index - 1" :class="['mb-1 transition-colors duration-200', log.color || (isDarkMode ? 'text-green-400' : 'text-green-600')]">
+          <div v-for="(log, index) in [...filteredConsoleLogs].reverse()" :key="filteredConsoleLogs.length - index - 1" :class="['mb-1 transition-colors duration-200', getLevelColor(log.level || 'log')]">
             {{ typeof log === 'string' ? log : log.message }}
           </div>
           <!-- Single spacer at bottom for visual separation -->
@@ -1006,12 +1101,25 @@
         </div>
       </div>
     </div>
+    
+    <!-- Validation Error Popup -->
+    <ValidationErrorPopup
+      :show="validationError.show"
+      :message="validationError.message"
+      :isDarkMode="isDarkMode"
+      @close="closeValidationError"
+    />
   </div>
 </template>
 
 <script>
+import ValidationErrorPopup from './ValidationErrorPopup.vue'
+
 export default {
   name: 'Inspector',
+  components: {
+    ValidationErrorPopup
+  },
   props: {
     isDarkMode: {
       type: Boolean,
@@ -1063,7 +1171,13 @@ export default {
       designControlElement: null,
       runtimeControlElement: null,
       _iconUrlCache: new Map(), // Cache for icon object URLs to prevent infinite loops
-      lastLoadedControlKey: '' // Track which control is currently loaded to detect switches
+      lastLoadedControlKey: '', // Track which control is currently loaded to detect switches
+      validationError: {
+        show: false,
+        message: '',
+        propId: null,
+        previousValue: null
+      }
     }
   },
   computed: {
@@ -1453,7 +1567,6 @@ export default {
         timestamp: new Date().toLocaleTimeString(),
         level: actualType,
         message: `[${new Date().toLocaleTimeString()}] ${actualMessage}`,
-        color: this.getLevelColor(actualType),
         source: source
       })
       // Keep only last 100 logs
@@ -1497,7 +1610,6 @@ export default {
         timestamp,
         level: actualLevel,
         message: `[${timestamp}] ${actualMessage}${formattedArgs}`,
-        color: this.getLevelColor(actualLevel),
         source: source
       })
       
@@ -1958,6 +2070,20 @@ export default {
           initialvalue: 'false',
           description: 'Read-only state'
         },
+        'TabIndex': {
+          id: 'TabIndex',
+          friendlyname: 'Tab Index',
+          type: 'string',
+          inputType: 'number',
+          inputAttributes: {
+            step: '1',
+            min: '-1',
+            max: '126',
+            inputmode: 'numeric'
+          },
+          initialvalue: '0',
+          description: 'Keyboard tab order (0 default, -1 removes from tab flow)'
+        },
         'Height': {
           id: 'Height',
           friendlyname: 'Height',
@@ -2028,7 +2154,11 @@ export default {
       if (this.manifest.properties) {
         this.manifest.properties.forEach(prop => {
           if (!this.propValues.hasOwnProperty(prop.id) || resetToDefaults) {
-            this.propValues[prop.id] = prop.initialvalue || ''
+            let initialValue = prop.initialvalue || ''
+            if (this.isTabIndexProperty(prop)) {
+              initialValue = this.sanitizeTabIndexValue(initialValue)
+            }
+            this.propValues[prop.id] = initialValue
           }
         })
       }
@@ -2043,9 +2173,17 @@ export default {
           (resetToDefaults && !customPropertyIds.has(prop.id))
         
         if (shouldInitialize) {
-          this.propValues[prop.id] = prop.initialvalue || ''
+          let initialValue = prop.initialvalue || ''
+          if (this.isTabIndexProperty(prop)) {
+            initialValue = this.sanitizeTabIndexValue(initialValue)
+          }
+          this.propValues[prop.id] = initialValue
         }
       })
+      
+      if (this.propValues.hasOwnProperty('TabIndex')) {
+        this.propValues['TabIndex'] = this.sanitizeTabIndexValue(this.propValues['TabIndex'])
+      }
       
       // Apply initial size changes after a short delay to ensure container is ready
       this.$nextTick(() => {
@@ -2056,6 +2194,30 @@ export default {
     },
     
     updateProperty(propId, value) {
+      // Validate the property value before updating
+      const validationResult = this.validateProperty(propId, value)
+      if (!validationResult.valid) {
+        // Show validation error and reset to previous value
+        this.showValidationError(validationResult.message, propId)
+        // Reset to previous value
+        if (this.validationError.previousValue !== null) {
+          this.propValues[propId] = this.validationError.previousValue
+        } else {
+          // Fallback to initial value from manifest
+          const prop = this.getPropertyById(propId)
+          if (prop && prop.initialvalue !== undefined) {
+            this.propValues[propId] = prop.initialvalue
+          }
+        }
+        return
+      }
+      
+      // Store current value as previous for potential rollback
+      this.validationError.previousValue = this.propValues[propId]
+      
+      if (propId === 'TabIndex') {
+        value = this.sanitizeTabIndexValue(value)
+      }
       this.propValues[propId] = value
       this.logControl(`Property ${propId} changed to: ${value}`)
       
@@ -2067,6 +2229,70 @@ export default {
       
       // Debounce property changes to avoid excessive reloading
       this.debouncedPropertyChange()
+    },
+    
+    getPropertyById(propId) {
+      if (!this.manifest || !this.manifest.properties) return null
+      return this.manifest.properties.find(p => p.id === propId) || null
+    },
+    
+    validateProperty(propId, value) {
+      const prop = this.getPropertyById(propId)
+      if (!prop) {
+        return { valid: true } // No validation if property not found
+      }
+      
+      // Convert value to string for validation
+      const stringValue = String(value || '')
+      
+      // Check int type validation first (default validation)
+      if (prop.type === 'int') {
+        // Check if value is a valid integer
+        const numValue = Number(stringValue)
+        if (isNaN(numValue) || !isFinite(numValue) || !Number.isInteger(numValue)) {
+          // Use custom message if provided, otherwise use default
+          const message = prop.validationmessage || 
+            `You have entered an invalid value. Only numbers between -2147483648 and 2147483647 are supported.`
+          return { valid: false, message: message }
+        }
+        
+        // Check 32-bit integer range
+        if (numValue < -2147483648 || numValue > 2147483647) {
+          const message = prop.validationmessage || 
+            `You have entered an invalid value. Only numbers between -2147483648 and 2147483647 are supported.`
+          return { valid: false, message: message }
+        }
+      }
+      
+      // Check custom validation pattern if provided
+      if (prop.validationpattern) {
+        try {
+          const regex = new RegExp(prop.validationpattern)
+          if (!regex.test(stringValue)) {
+            const message = prop.validationmessage || 
+              `You have entered an invalid value.`
+            return { valid: false, message: message }
+          }
+        } catch (e) {
+          // Invalid regex pattern - log but don't block
+          console.warn(`Invalid validation pattern for property ${propId}:`, prop.validationpattern)
+        }
+      }
+      
+      return { valid: true }
+    },
+    
+    showValidationError(message, propId) {
+      this.validationError.show = true
+      this.validationError.message = message
+      this.validationError.propId = propId
+    },
+    
+    closeValidationError() {
+      this.validationError.show = false
+      this.validationError.message = ''
+      this.validationError.propId = null
+      this.validationError.previousValue = null
     },
     
     async reloadControlWithPropertyChanges() {
@@ -3020,15 +3246,49 @@ export default {
     
     // Add method to determine input type
     getPropertyInputType(prop) {
+      if (!prop || typeof prop !== 'object') {
+        return 'text'
+      }
+      if (prop.inputType) {
+        return prop.inputType
+      }
+      if (prop.inputtype) {
+        return prop.inputtype
+      }
       if (prop.type === 'bool') {
         return 'checkbox'
       }
+      const normalizedType = typeof prop.type === 'string' ? prop.type.toLowerCase() : ''
+      if (normalizedType === 'number' || normalizedType === 'int' || normalizedType === 'integer') {
+        return 'number'
+      }
       // Handle both 'string' (standard) and 'text' (legacy) for backward compatibility
-      if ((prop.type === 'string' || prop.type === 'text') && prop.inputlength > 255) {
+      const inputLength = Number(prop.inputlength)
+      if ((normalizedType === 'string' || normalizedType === 'text') && inputLength > 255) {
         return 'textarea'
       }
       // Return 'text' for HTML input type (this is correct - it's the HTML input type, not the property type)
       return 'text'
+    },
+    
+    getPropertyInputAttrs(prop) {
+      if (!prop || typeof prop !== 'object') {
+        return {}
+      }
+      const attrs = {}
+      const customAttrs = prop.inputAttributes || prop.inputattributes
+      if (customAttrs && typeof customAttrs === 'object') {
+        Object.assign(attrs, customAttrs)
+      }
+      if (this.getPropertyInputType(prop) === 'number') {
+        if (!('step' in attrs)) {
+          attrs.step = '1'
+        }
+        if (!('inputmode' in attrs)) {
+          attrs.inputmode = 'numeric'
+        }
+      }
+      return attrs
     },
     
     // Add method to apply Height/Width changes to control container
@@ -3155,6 +3415,60 @@ export default {
     // Dropdown property methods
     isDropdownProperty(prop) {
       return prop.type === 'drop'
+    },
+    
+    isTabIndexProperty(prop) {
+      if (!prop || !prop.id) return false
+      return String(prop.id).toLowerCase() === 'tabindex'
+    },
+    
+    getTabIndexDisplay(value) {
+      const trimmed = value === undefined || value === null ? '' : String(value).trim()
+      if (trimmed === '') {
+        return 'Not set (uses control default)'
+      }
+      if (trimmed === '-1') {
+        return '(none) · control is removed from the tab order'
+      }
+      if (trimmed === '0') {
+        return '(Default) · follows host tab order'
+      }
+      const numeric = Number(trimmed)
+      if (!Number.isNaN(numeric) && numeric >= 1 && numeric <= 126) {
+        return `Tab position ${numeric}`
+      }
+      return 'Invalid value (use -1, 0, or 1-126)'
+    },
+    
+    sanitizeTabIndexValue(rawValue) {
+      if (rawValue === undefined || rawValue === null) {
+        return ''
+      }
+      const trimmed = String(rawValue).trim()
+      if (trimmed === '') {
+        return ''
+      }
+      const numeric = Number(trimmed)
+      if (Number.isNaN(numeric)) {
+        return this.propValues['TabIndex'] ?? ''
+      }
+      if (numeric <= -1) {
+        return '-1'
+      }
+      if (numeric === 0) {
+        return '0'
+      }
+      if (numeric > 126) {
+        return '126'
+      }
+      return String(Math.round(numeric))
+    },
+    
+    adjustTabIndex(propId, delta) {
+      const current = this.sanitizeTabIndexValue(this.propValues[propId])
+      const numeric = current === '' ? 0 : Number(current)
+      const nextValue = this.sanitizeTabIndexValue(String(numeric + delta))
+      this.updateProperty(propId, nextValue)
     },
     
     getDropdownItems(prop) {

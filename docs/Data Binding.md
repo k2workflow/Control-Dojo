@@ -61,6 +61,14 @@ Use `listdata` for controls that show arrays of items—think dropdowns, listbox
 
 **Important**: The `initialvalue` needs to be a **JSON string** with an array of objects. This static data shows up when you first drop the control on a form, before any SmartObject binding is set up.
 
+**Critical Limitation - Only One ListData Property Per Control:**
+
+K2 controls **cannot have more than one property with type `listdata`**. This is a K2 platform limitation:
+
+- **Error on Registration**: If you attempt to register a control with multiple `listdata` properties, K2 will display an error message and reject the control registration
+- **SMO Binding Restriction**: Controls in K2 cannot have more than one type of SMO (SmartObject) binding, and cannot have two of the same SMO binding types
+- **Design Consideration**: If your control needs multiple data sources, consider using a single `listdata` property and handling data aggregation in your control's JavaScript logic, or use other property types (like `string` or `list` with `ListParts`) for additional configuration data
+
 ### List Property Structure (`list` with `ListParts`)
 
 Building something like a data grid with column definitions? You'll probably want the `list` type with `ListParts`:

@@ -15,7 +15,7 @@ const DT_DRAG_DROP_STRINGS = {
   }
 };
 
-const DRAG_DROP_DEFAULT_HEIGHT = '70px';
+const DRAG_DROP_DEFAULT_HEIGHT = '56px';
 
 function dtDragDropDetectBrowserCulture() {
   try {
@@ -255,31 +255,30 @@ if (!window.customElements.get('drag-drop-control')) {
             position: relative;
             width: 100%;
             height: 100%;
-            min-height: inherit;
-            border-radius: 12px;
+            min-height: 56px;
             overflow: hidden;
             --icon-only-size: 140px;
           }
           .drop-zone {
             border: 2px dashed var(--drag-drop-border-color);
-            border-radius: 12px;
-            padding: 18px 20px;
+            padding: 8px 10px;
             width: 100%;
             height: 100%;
-            min-height: 70px;
+            min-height: 56px;
             box-sizing: border-box;
             background: var(--drag-drop-background);
             display: flex;
             flex-direction: row;
             align-items: center;
             justify-content: flex-start;
-            gap: 16px;
+            gap: 6px;
             position: relative;
             flex-wrap: wrap;
           }
           .drop-icon {
-            width: clamp(52px, 14vw, 80px);
-            height: clamp(52px, 14vw, 80px);
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -307,11 +306,19 @@ if (!window.customElements.get('drag-drop-control')) {
           }
           .drop-copy .primary {
             font-weight: 600;
-            font-size: 14px;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
           }
           .drop-copy .secondary {
-            font-size: 12px;
+            font-size: 10px;
             color: var(--drag-drop-text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
           }
           .state-overlay {
             position: absolute;
@@ -362,19 +369,21 @@ if (!window.customElements.get('drag-drop-control')) {
             background: transparent;
           }
           .preview-root.compact-mode .drop-zone {
-            padding: 14px 16px;
-            gap: 10px;
-            border-radius: 10px;
+            padding: 8px 10px;
+            gap: 6px;
+            border-radius: 8px;
+            min-height: 56px;
           }
           .preview-root.compact-mode .drop-icon {
-            width: 44px;
-            height: 44px;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
           }
           .preview-root.compact-mode .drop-copy .primary {
-            font-size: 13px;
+            font-size: 12px;
           }
           .preview-root.compact-mode .drop-copy .secondary {
-            font-size: 11px;
+            font-size: 10px;
           }
           .preview-root.small-mode .drop-zone {
             padding: 8px 10px;
@@ -448,6 +457,10 @@ if (!window.customElements.get('drag-drop-control')) {
       this.updateBorderStyle();
       this._hasRendered = true;
       this.applyResponsiveModes(this._root?.offsetWidth || 0, this._root?.offsetHeight || 0);
+      // Force small-mode by default to match runtime appearance
+      if (!this._root.classList.contains('small-mode')) {
+        this._root.classList.add('small-mode', 'compact-mode');
+      }
       this.setupResizeObserver();
     }
 

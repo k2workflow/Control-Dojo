@@ -32,7 +32,7 @@ Drag and Drop/
 | `Accept` | Comma-separated list of accepted file types passed to the native file input. Supports file extensions (e.g., `.pdf`, `.docx`) and MIME types (e.g., `image/*`, `image/png`, `application/pdf`). Examples: `.pdf,.doc,.docx` or `image/*,application/pdf` or `.pdf,image/png,image/jpeg` | empty |
 | `Tooltip` | Title/aria-label applied to the drop surface. Falls back to the localized resource if left blank. | `Click here to attach a file` |
 | `MaxSize` | Optional maximum file size. Accepts raw bytes (`5000000`) or shorthand with units (`5 MB`, `750 kb`). Values larger than the runtime ceiling are clamped to the backend fallback (5 GB). | empty |
-| `ShowInformation` | Toggles the textual file details. When `false`, the control renders an icon-only experience. | `true` |
+| `ShowInformation` | Toggles the textual file details. When `false`, the control renders an icon-only experience. In icon-only mode, download and clear buttons appear in an external hover-revealed container to the right of the control (left in RTL) to prevent overlap with the file type icon. | `true` |
 | `Borderless` | Removes the standard border and background so the control can blend into custom layouts. | `false` |
 | `IsVisible` | Standard property – toggles host visibility | `true` |
 | `IsEnabled` | Standard property – blocks interaction and shows overlay | `true` |
@@ -42,9 +42,15 @@ Drag and Drop/
 
 ## Events
 
-- `OnChanged` – fired when the selected file set changes (drag/drop or browse)  
-- `OnFocus` / `OnBlur` – fired when the drop surface gains or loses focus  
-- `OnEnter` – fired when the user presses Enter/Space on the focused drop zone
+| Event | Description | Event Detail |
+|-------|-------------|--------------|
+| `OnChanged` | Fired when the selected file set changes (drag/drop or browse) | `{ files: Array<{name, size, type}> }` |
+| `OnFocus` | Fired when the drop surface gains focus | None |
+| `OnBlur` | Fired when the drop surface loses focus | None |
+| `OnEnter` | Fired when the user presses Enter/Space on the focused drop zone | None |
+| `BlockedFileTypeError` | Fired when a blocked file type is attempted (e.g., .exe, .dll, .bat, .js, etc.) | `{ file: string, extension: string, blockedList: Array<string> }` |
+| `FileTypeError` | Fired when a file type doesn't match the Accept property | `{ file: string, fileType: string, allowedTypes: string }` |
+| `FileSizeError` | Fired when a file exceeds the MaxSize limit | `{ file: string, fileSize: number, maxSize: number }` |
 
 ## Runtime Behavior
 
@@ -53,14 +59,31 @@ Drag and Drop/
 - Files are captured one at a time; the drop surface flips to a file preview showing name, type, and size.  
 - Files are serialized to JSON for downstream processing; no list data binding or SmartObject scaffolding remains.  
 - Accessibility: drop zone uses `role="button"`, focus outlines, and status updates via a live region.  
-- Overlays show Disabled or Read Only states without using z-index values, satisfying the guidance in `docs/Style Integration.md`.
-- File validation enforces the runtime max size guard before emitting `OnChanged`. If no limit is supplied by the host, the control uses the backend fallback defined in `runtime_logic.js` (`DEFAULT_BACKEND_MAX_FILE_SIZE_BYTES = 5120 * 1024 * 1024`, i.e., 5 GB).
-- Unsafe file types are rejected even if the Accept list would otherwise allow them. The hard-coded block list (also in `runtime_logic.js`) covers executable and script extensions such as `.exe`, `.dll`, `.bat`, `.cmd`, `.ps1`, `.js`, `.vbs`, `.jar`, `.msi`, `.reg`, and similar entries so only benign payloads reach the host logic.
+- Overlays show Disabled or Read Only states without using z-index values, satisfying the guidance in `docs/Style Integration.md`.  
+- File validation enforces the runtime max size guard before emitting `OnChanged`. If no limit is supplied by the host, the control uses the backend fallback defined in `runtime_logic.js` (`DEFAULT_BACKEND_MAX_FILE_SIZE_BYTES = 5120 * 1024 * 1024`, i.e., 5 GB).  
+- Unsafe file types are rejected even if the Accept list would otherwise allow them. The hard-coded block list (also in `runtime_logic.js`) covers executable and script extensions such as `.exe`, `.dll`, `.bat`, `.cmd`, `.ps1`, `.js`, `.vbs`, `.jar`, `.msi`, `.reg`, and similar entries so only benign payloads reach the host logic. When a blocked file type is detected, the `BlockedFileTypeError` event is fired.  
+- **File Download**: When a file is loaded from a SmartObject (has a `FilePath`), the file can be downloaded:
+  - **Full details mode** (`ShowInformation = true`): A download button appears next to the file name in the preview. Clicking it downloads the file from the server using the base control's `downloadFile` method.
+  - **Icon-only mode** (`ShowInformation = false`): An external action buttons container appears on hover to the right of the control (left in RTL). This container includes both download and clear buttons with backgrounds for visibility. The buttons only appear when hovering over the control and when a file is present. Files loaded from SmartObjects may not have size metadata (size will be 0), in which case the file size is not displayed in the preview for a cleaner UI.
+
+## Icon-Only Mode
+
+When `ShowInformation` is set to `false`, the control displays only the file type icon without text details. This compact mode is ideal for space-constrained layouts. Key behaviors:
+
+- **File Type Display**: The file type abbreviation (e.g., "PDF", "DOC", "IMG") is displayed as a large icon within the control border.
+- **Hover-Revealed Actions**: When a file is present, hovering over the control reveals an external action buttons container positioned to the right (left in RTL layouts). This container includes:
+  - **Download Button**: Appears only when the file has a `FilePath` (files loaded from SmartObjects). Downloads the file using the base control's `downloadFile` method.
+  - **Clear Button**: Removes the selected file and resets the control to its empty state.
+- **Visual Design**: The action buttons container has a subtle background, border, and shadow to ensure visibility against various backgrounds. Buttons have individual backgrounds and hover effects for clear interaction feedback.
+- **No Overlap**: By positioning action buttons outside the control border, the file type icon remains unobstructed regardless of the file type label length.
 
 ## Usage Constraints
 
-- The control only uploads files from the browser into downstream logic. It cannot download, stream, or hydrate files that already live on the K2 server.
-- Pair it with SmartObject Create or Save methods where the runtime expects incoming file content. It is not suitable for SmartObject Load methods or any scenario where the control would need to render server-side file payloads back to the user.
+- The control supports both uploading files from the browser and downloading files that already exist on the K2 server.  
+- When loading files from SmartObject Load methods, files with a `FilePath` can be downloaded:
+  - In full details mode: via the download button next to the file name.
+  - In icon-only mode: via the hover-revealed download button in the external action container.
+- Pair it with SmartObject Create or Save methods where the runtime expects incoming file content, or with SmartObject Load methods where you need to display and download existing files.
 
 ## Suggested Use Cases
 

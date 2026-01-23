@@ -7,8 +7,8 @@
   "displayName": "Button List",
   "tagName": "button-list",
   "description": "A flexible button list control that displays a collection of interactive buttons with customizable styling, layout options, and icon support. Supports both static data and SmartObject binding for dynamic content.",
+  "datatypes": ["Text"],
   "supports": [
-    "lo", 
     "Width", 
     "Height",
     "Value", 
@@ -41,22 +41,15 @@
       "changesdisplay": true
     },
     {
-      "id": "List",
-      "refreshdisplay": "true",
-      "friendlyname": "List Items",
-      "type": "listdata",
-      "category": "Detail",
-      "initialvalue": "[{\"display\": \"Item 1\", \"value\": \"1\"},{\"display\": \"Item 2\",\"value\": \"2\"}]"
-    },
-    {
       "id": "MaxItems",
       "refreshdisplay": "true",
       "friendlyname": "Max Items",
-      "type": "string",
-      "inputlength": "50",
-      "initialvalue": "0",
+      "type": "int",
+      "initialvalue": 0,
+      "validationpattern": "^0$|^[1-9]\\d*$",
+      "validationmessage": "Must be zero or a positive integer.",
       "changesdisplay": true,
-      "description": "Maximum number of items to display (0 = unlimited). Accepts numeric values as strings."
+      "description": "Maximum number of items to display (0 = unlimited). Uses int type with default and custom validation."
     },
     {
       "id": "ButtonLayout",

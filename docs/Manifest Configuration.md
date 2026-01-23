@@ -84,6 +84,74 @@ The `manifest.json` file is the **central configuration file** for every K2 cust
 | `events` | array | Yes | Events the control can trigger |
 | `properties` | array | Yes | Custom properties the control exposes |
 
+### Control Data Type Declaration
+
+| Field | Type | Required | Description |
+|-------|------|----------|----------------------------------------|
+| `datatypes` | array | No | Array of data types the control supports. Used by K2 for field binding and the "Change Control" functionality. |
+
+The `datatypes` property tells K2 what data types your control supports. This is particularly useful for:
+
+- **Field Binding**: K2 can suggest your control when binding fields of matching data types
+- **Change Control**: When users want to swap an existing control for a different one in K2 Designer, your control will appear as an option if it supports the same data type as the original control
+
+**Supported Data Types:**
+
+The following data types are supported in the `datatypes` array (listed alphabetically):
+
+- `AutoGuid` - Auto-generated GUID values
+- `AutoNumber` - Auto-generated number values
+- `Date` - Date values (without time)
+- `DateTime` - Date and time values
+- `Decimal` - Decimal/numeric values
+- `File` - File attachments
+- `Guid` - GUID values
+- `Hyperlink` - Hyperlink/URL values
+- `Image` - Image data
+- `Label` - Label/text display
+- `Memo` - Long text/memo values
+- `MultiValue` - Multiple values
+- `Number` - Numeric values
+- `Text` - Text/string values
+- `Time` - Time values
+- `Xml` - XML data
+- `YesNo` - Boolean/yes-no values
+
+**Example:**
+
+```json
+{
+  "icon": "icon.svg",
+  "displayName": "Drag and Drop File Upload",
+  "tagName": "drag-drop-control",
+  "datatypes": ["File"],
+  "supports": ["Value", "Width", "Height"],
+  "properties": [
+    {
+      "id": "Value",
+      "type": "string",
+      "friendlyname": "Selected Files"
+    }
+  ]
+}
+```
+
+In this example, the control declares that it supports `File` data types. This means:
+- When binding a File field, K2 may suggest this control
+- When using "Change Control" on an existing file control (like the Attachment control), this custom control will appear as a replacement option
+
+**Multiple Data Types:**
+
+You can specify multiple data types if your control supports them:
+
+```json
+{
+  "datatypes": ["Text", "Memo"]
+}
+```
+
+When multiple data types are specified, your control will appear as an option in K2's Change Control dialog for any of the listed data types. This is useful for controls that can handle multiple data formats.
+
 ## File Organization
 
 ### Separate Files Approach (Recommended)
@@ -140,6 +208,7 @@ The `supports` array tells K2 which standard properties your control implements:
 | `Property` | Generic property support | Optional - for dynamic properties |
 | `Style` | Style property support | Optional - for custom styling |
 | `Format` | Format property support | Optional - for data formatting |
+| `ControlExpression` | Enables K2 Expressions panel for the control | Optional - no code required beyond declaration. **Important:** Unlike other support properties, ControlExpression does not require separate get/set methods. It uses the `Value` property's getter/setter to change the control's value, so `Value` must be in the `supports` array for expressions to work. |
 
 ### Example Standard Properties Declaration
 
@@ -151,10 +220,18 @@ The `supports` array tells K2 which standard properties your control implements:
     "Height",
     "IsVisible",
     "IsEnabled",
-    "IsReadOnly"
+    "IsReadOnly",
+    "TabIndex",
+    "ControlExpression"
   ]
 }
 ```
+
+**Note on ControlExpression:** When `ControlExpression` is included in `supports`, K2 enables the Expressions panel in the designer. Unlike other support properties, you do **not** need to implement separate get/set methods for `ControlExpression`. Instead, expressions work by setting and getting the control's `Value` property. This means:
+- `Value` must be in your `supports` array for expressions to work
+- You must implement `get Value()` and `set Value(value)` methods
+- When a user configures an expression, K2 evaluates it and calls `set Value(result)` on your control
+- When K2 needs the expression result, it calls `get Value()` on your control
 
 ### Overriding Standard Property Defaults
 
@@ -231,6 +308,70 @@ You can add more metadata to properties for a better designer experience:
 | `inputlength` | string | No | Maximum input length for string properties |
 | `dropitems` | array | No | Dropdown options (required for `drop` type) |
 | `description` | string | No | Property description/tooltip shown in designer |
+| `category` | string | No | Property category for grouping in K2 designer (see [Property Categories](#property-categories)) |
+
+#### Escaping rules for property metadata
+
+- **Property ID and friendlyname:** must **not** include escaped characters. The designer validation blocks values containing newline/tab/backspace/vertical tab/null or backslash sequences (`\n`, `\r`, `\t`, `\b`, `\f`, `\v`, `\a`, `\0`, `\`). It also rejects hex/Unicode escape patterns (`\x00`, `\u0000`, `\U00000000`). Use plain ASCII text.
+- **Initialvalue:** can include unescaped characters. Before writing to generated code, we encode it (via `HttpUtility.JavaScriptStringEncode`), so designers can type raw text and it will be safely escaped for runtime.
+- **Why:** escaped control characters in IDs or friendly names break manifest parsing and UI rendering. Escaping initial values at generation time avoids runtime syntax errors while keeping authoring simple.
+
+### Property Categories
+
+The `category` field groups properties together in the K2 designer's property panel, making it easier for users to find related properties.
+
+#### How Categories Work
+
+When you specify a `category` for a property:
+- **K2 Designer Behavior**: The property appears under that category name in the property panel
+- **Custom Categories**: You can use any category name (e.g., `"Appearance"`, `"Data"`, `"File Details"`)
+- **Existing Categories**: If you use an existing K2 category name, properties will be grouped with other properties in that category
+
+#### Default Behavior
+
+If `category` is not specified:
+- **Standard Properties**: Most standard properties (like `Width`, `Height`, `IsVisible`, etc.) default to the `"General"` category
+- **Custom Properties**: Custom properties default to the `"Details"` category
+
+#### Localization Considerations
+
+**Important**: Custom category names (any category you define) will **not** be automatically localized by K2's localization functionality. The category name you specify will appear exactly as written in all languages.
+
+#### Example Usage
+
+```json
+{
+  "properties": [
+    {
+      "id": "Watermark",
+      "friendlyname": "Watermark Text",
+      "type": "string",
+      "category": "Appearance",
+      "initialvalue": "",
+      "refreshdisplay": "true",
+      "changesdisplay": true
+    },
+    {
+      "id": "List",
+      "friendlyname": "List Items",
+      "type": "listdata",
+      "category": "Detail",
+      "initialvalue": "[]",
+      "refreshdisplay": "true",
+      "changesdisplay": true
+    },
+    {
+      "id": "MaxFileSize",
+      "friendlyname": "Maximum File Size",
+      "type": "string",
+      "category": "File Details",
+      "initialvalue": "10MB",
+      "refreshdisplay": "true",
+      "changesdisplay": true
+    }
+  ]
+}
+```
 
 ### Supported Property Types
 
@@ -239,10 +380,66 @@ You can add more metadata to properties for a better designer experience:
 | `string` | String values | `"Hello World"`, `""` |
 | `bool` | Boolean values | `"true"`, `"false"` |
 | `drop` | Dropdown selection | See dropdown structure below |
+| `int` | 32-bit integer values with built-in size validation | `1`, `"1"`, `0`, `"0"` |
 
 **Note**: 
 - `text` is accepted for backward compatibility but should be standardized to `string`
 - For data binding support, see [Data Binding Guide](./Data%20Binding.md)
+- For `int`, the default validation enforces the 32-bit signed range (`-2147483648` to `2147483647`). You can specify the `initialvalue` as either a number or a quoted string, but not both.
+
+### Validation fields for properties (Design-time Only)
+
+Two optional fields let you add regex-based validation on any property type. **Important: These fields are ONLY for design-time validation in the K2 Designer. They do NOT provide runtime validation.**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `validationpattern` | string | Regex string used to validate the property value at design-time |
+| `validationmessage` | string | Message displayed when the pattern fails at design-time |
+
+**Design-time Validation Behavior:**
+- Validation occurs when users edit property values in the K2 Designer
+- If validation fails, an error popup appears and the value is reset
+- The `initialvalue` is not checked against the regex; validation only runs on user input at design time
+- If you set only one of these fields, the other falls back to the default for the type. For `int`, that means the default integer validator still runs if only a message is supplied, and the default message is used if only a pattern is supplied
+- Validation messages should not include property name placeholders (like `{0}`) as this breaks K2 localization. The default validation messages do not include the property name
+- Default `int` validation blocks non-numeric strings and values outside the 32-bit range and shows: "You have entered an invalid value. Only numbers between -2147483648 and 2147483647 are supported."
+- Default validation messages for other types (when no custom message is provided) show: "You have entered an invalid value."
+
+**Runtime Validation:**
+- These fields do NOT provide runtime validation
+- Runtime validation can be handled by developers in their JavaScript code using any validation logic they need
+- For integration with K2's validation system, you can implement the `Validate()` method (see [Form View Validation Guide](./Form%20View%20Validation.md))
+- The design-time validation in the manifest helps ensure property values are correct when configuring controls in the designer, but does not restrict what values can be set programmatically at runtime
+
+**Examples**
+
+```json
+{
+  "id": "MaxItems",
+  "friendlyname": "Max Items",
+  "type": "int",
+  "initialvalue": 0,
+  "validationpattern": "^0$|^[1-9]\\d*$",
+  "validationmessage": "Must be zero or a positive integer.",
+  "refreshdisplay": "true",
+  "changesdisplay": true
+}
+```
+*Note: This validation only runs at design-time when users edit the property in K2 Designer.*
+
+```json
+{
+  "id": "FavoriteAnimal",
+  "friendlyname": "Favorite Animal",
+  "type": "string",
+  "initialvalue": "Enter value",
+  "validationpattern": "^dog$",
+  "validationmessage": "No other word except dog.",
+  "refreshdisplay": "true",
+  "changesdisplay": true
+}
+```
+*Note: This validation only runs at design-time when users edit the property in K2 Designer. For runtime validation, implement the `Validate()` method (see [Form View Validation Guide](./Form%20View%20Validation.md)).*
 
 ### Dropdown Property Structure
 
@@ -557,6 +754,7 @@ You can organize files in subfolders:
 3. **Include all properties** - Define all configurable aspects
 4. **Document with friendly names** - Make properties user-friendly
 5. **Set sensible defaults** - Provide useful `initialvalue` for all properties
+6. **Avoid overriding reserved properties** - Never add `TabIndex` or `ControlExpression` to the `properties` array; declare them only in `supports`
 
 ### File Organization
 

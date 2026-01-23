@@ -50,7 +50,7 @@
         </div>
 
       <!-- Step Content -->
-      <div :class="['bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-6 transition-colors duration-200 overflow-y-auto', isDarkMode ? 'bg-dark-800 border-dark-700' : 'bg-white border-gray-200']" style="max-height: calc(100vh - 20rem);">
+      <div :class="['rounded-lg shadow p-6 transition-colors duration-200 overflow-y-auto', isDarkMode ? 'bg-dark-800 border-dark-700 border' : 'bg-white border-gray-200 border']" style="max-height: calc(100vh - 20rem);">
         <!-- Step 1: Basic Information -->
         <div v-if="currentStep === 1" class="space-y-6">
           <h2 :class="['text-xl font-semibold transition-colors duration-200', isDarkMode ? 'text-white' : 'text-gray-900']">Basic Control Information</h2>
@@ -64,7 +64,10 @@
                 type="text"
                 placeholder="e.g., My Custom Control"
                 :class="[
-                  'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
+                  'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5',
+                  isDarkMode 
+                    ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                    : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500',
                   validationErrors.displayName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                 ]"
                 @blur="validateField('displayName')"
@@ -82,7 +85,10 @@
                 type="text"
                 placeholder="e.g., my-custom-control"
                 :class="[
-                  'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
+                  'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5',
+                  isDarkMode 
+                    ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                    : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500',
                   validationErrors.tagName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                 ]"
                 @blur="validateField('tagName')"
@@ -91,6 +97,84 @@
               <p v-if="validationErrors.tagName" class="text-red-500 text-sm mt-1">{{ validationErrors.tagName }}</p>
               <p v-if="!validationErrors.tagName && controlData.tagName" :class="['text-xs mt-1', isDarkMode ? 'text-gray-400' : 'text-gray-500']">
                 Custom HTML elements must contain a hyphen (e.g., k2-my-control)
+              </p>
+            </div>
+            <div>
+              <label :class="['block text-sm font-medium mb-2 transition-colors duration-200', isDarkMode ? 'text-gray-300' : 'text-gray-700']">
+                Supported Data Types (K2)
+                <span :class="['text-xs font-normal ml-1', isDarkMode ? 'text-gray-400' : 'text-gray-500']">(Optional)</span>
+              </label>
+              <div class="relative data-types-dropdown">
+                <button
+                  type="button"
+                  @click.stop="toggleDataTypesDropdown"
+                  :class="[
+                    'w-full text-left border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block p-2.5 flex items-center justify-between',
+                    isDarkMode 
+                      ? 'bg-dark-700 border-dark-600 text-white focus:ring-blue-500' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500'
+                  ]"
+                >
+                  <span v-if="controlData.datatypes.length === 0" :class="[isDarkMode ? 'text-gray-400' : 'text-gray-500']">
+                    Select data types...
+                  </span>
+                  <span v-else class="truncate">
+                    {{ controlData.datatypes.length }} type{{ controlData.datatypes.length !== 1 ? 's' : '' }} selected
+                  </span>
+                  <svg 
+                    :class="['w-5 h-5 transition-transform', isDarkMode ? 'text-gray-400' : 'text-gray-500', showDataTypesDropdown ? 'rotate-180' : '']"
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div
+                  v-show="showDataTypesDropdown"
+                  :class="[
+                    'absolute z-50 w-full mt-1 border rounded-lg shadow-lg overflow-hidden',
+                    isDarkMode 
+                      ? 'bg-dark-700 border-dark-600' 
+                      : 'bg-white border-gray-300'
+                  ]"
+                  style="max-height: 300px; overflow-y: auto;"
+                >
+                  <div class="p-2 space-y-1">
+                    <div
+                      v-for="datatype in availableDataTypes"
+                      :key="datatype.value"
+                      class="flex items-start space-x-2 p-2 rounded hover:bg-opacity-50 transition-colors cursor-pointer"
+                      :class="[
+                        isDarkMode 
+                          ? 'hover:bg-dark-600' 
+                          : 'hover:bg-gray-100'
+                      ]"
+                      @click="toggleDataType(datatype.value)"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="controlData.datatypes.includes(datatype.value)"
+                        :class="[
+                          'mt-0.5 w-4 h-4 rounded focus:ring-2 focus:ring-blue-500',
+                          isDarkMode 
+                            ? 'text-orange-500 bg-dark-600 border-dark-500 focus:ring-orange-500 checked:bg-orange-500 checked:border-orange-500' 
+                            : 'text-blue-500 bg-white border-gray-300 focus:ring-blue-500 checked:bg-blue-500 checked:border-blue-500'
+                        ]"
+                        @click.stop="toggleDataType(datatype.value)"
+                        @change="() => {}"
+                      />
+                      <label :class="['text-sm cursor-pointer flex-1', isDarkMode ? 'text-gray-200' : 'text-gray-900']">
+                        {{ datatype.label }}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p v-if="controlData.datatypes.length > 0" :class="['text-xs mt-2 transition-colors duration-200', isDarkMode ? 'text-gray-400' : 'text-gray-500']">
+                Selected: <span :class="['font-medium', isDarkMode ? 'text-gray-300' : 'text-gray-700']">{{ controlData.datatypes.join(', ') }}</span>
               </p>
             </div>
             <div>
@@ -122,7 +206,7 @@
                 </div>
 
                 <!-- Icon Upload Section -->
-                <div :class="['border-2 border-dashed border-gray-300 rounded-lg p-4 transition-all duration-200 dark:border-gray-600 dark:bg-gray-700', isDarkMode ? 'border-dark-600 bg-dark-700' : 'border-gray-300 bg-gray-50']">
+                <div :class="['border-2 border-dashed rounded-lg p-4 transition-all duration-200', isDarkMode ? 'border-dark-600 bg-dark-700' : 'border-gray-300 bg-gray-50']">
                   <div class="text-center">
                     <input
                       ref="iconUpload"
@@ -135,8 +219,8 @@
                     <!-- Default Icon Preview -->
                     <div v-if="controlData.useDefaultIcon" class="space-y-2">
                       <div class="flex items-center justify-center">
-                        <div class="h-16 w-16 bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center">
-                          <svg class="h-8 w-8 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div :class="['h-16 w-16 rounded flex items-center justify-center', isDarkMode ? 'bg-dark-600' : 'bg-gray-200']">
+                          <svg :class="['h-8 w-8', isDarkMode ? 'text-gray-300' : 'text-gray-600']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
@@ -194,7 +278,12 @@
               v-model="controlData.description"
               rows="3"
               placeholder="Describe your control..."
-              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              :class="[
+                'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5',
+                isDarkMode 
+                  ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+              ]"
             />
           </div>
         </div>
@@ -247,11 +336,25 @@
                 </label>
                 <input
                   v-model="controlData.standardPropertyOverrides[prop.id]"
-                  type="text"
+                  :type="getStandardPropertyInputType(prop.id)"
+                  v-bind="getStandardPropertyInputAttrs(prop.id)"
                   :placeholder="getStandardPropertyPlaceholder(prop.id)"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  @blur="validateStandardPropertyOverrides"
+                  @input="validateStandardPropertyOverrides"
+                  :class="[
+                    'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200',
+                    isDarkMode 
+                      ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500',
+                    validationErrors[`standardProp_${prop.id}`] 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                      : ''
+                  ]"
                 />
-                <p :class="['text-xs mt-1 transition-colors duration-200', isDarkMode ? 'text-gray-400' : 'text-gray-500']">
+                <p v-if="validationErrors[`standardProp_${prop.id}`]" class="text-red-500 text-sm mt-1">
+                  {{ validationErrors[`standardProp_${prop.id}`] }}
+                </p>
+                <p v-else :class="['text-xs mt-1 transition-colors duration-200', isDarkMode ? 'text-gray-400' : 'text-gray-500']">
                   {{ prop.description }}
                 </p>
               </div>
@@ -266,7 +369,10 @@
             <button 
               @click="addCustomProperty" 
               :class="[
-                'text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-orange-600 dark:hover:bg-orange-700 dark:focus:ring-orange-300',
+                'text-white focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center',
+                isDarkMode 
+                  ? 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-300' 
+                  : 'bg-blue-700 hover:bg-blue-800 focus:ring-blue-300',
                 isDarkMode ? 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-300' : 'bg-blue-700 hover:bg-blue-800 focus:ring-blue-300'
               ]"
             >
@@ -284,7 +390,10 @@
               v-for="(prop, index) in controlData.customProperties"
               :key="index"
               :class="[
-                'bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-4 transition-all duration-200',
+                'border rounded-lg shadow p-4 transition-all duration-200',
+                isDarkMode 
+                  ? 'bg-dark-800 border-dark-700' 
+                  : 'bg-white border-gray-200',
                 isDarkMode ? 'border-dark-600 bg-dark-700' : 'border-gray-200 bg-gray-50'
               ]"
             >
@@ -296,7 +405,10 @@
                     type="text"
                     placeholder="e.g., customValue"
                     :class="[
-                      'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200',
+                      'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200',
+                      isDarkMode 
+                        ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500',
                       validationErrors[`customProp_${index}_id`] ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     ]"
                     @blur="validateCustomProperties"
@@ -309,7 +421,12 @@
                     v-model="prop.friendlyname"
                     type="text"
                     placeholder="e.g., Custom Value"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200"
+                    :class="[
+                      'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200',
+                      isDarkMode 
+                        ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                    ]"
                   />
                 </div>
                 <div>
@@ -317,7 +434,10 @@
                   <select 
                     v-model="prop.type" 
                     :class="[
-                      'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200',
+                      'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200',
+                      isDarkMode 
+                        ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500',
                       validationErrors[`customProp_${index}_type`] ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     ]"
                     @change="handlePropertyTypeChange(index, $event.target.value)"
@@ -325,6 +445,7 @@
                     <option value="">Select a type</option>
                     <option value="string">String</option>
                     <option value="boolean">Boolean</option>
+                    <option value="int">Integer</option>
                     <option value="drop">Dropdown</option>
                     <option value="listdata">List Data (Data Binding)</option>
                   </select>
@@ -441,7 +562,10 @@
                     @input="validateCustomProperties"
                     rows="2"
                     :class="[
-                      'bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200 resize-y',
+                      'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200 resize-y',
+                      isDarkMode 
+                        ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500',
                       validationErrors[`customProp_${index}_initialvalue`] 
                         ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
                         : 'border-gray-300'
@@ -453,6 +577,52 @@
                   <p v-else class="text-gray-500 text-xs mt-1">
                     Tip: Press Enter in this field to test newline validation. Multi-line values may break K2 runtime.
                   </p>
+                </div>
+                
+                <!-- Validation Fields (optional, available for all property types) -->
+                <div class="col-span-2 space-y-4 mt-4 pt-4 border-t" :class="isDarkMode ? 'border-dark-600' : 'border-gray-300'">
+                  <div>
+                    <label :class="['block text-sm font-medium mb-1 transition-colors duration-200', isDarkMode ? 'text-gray-300' : 'text-gray-700']">
+                      Validation Pattern (Optional)
+                      <span :class="['text-xs font-normal ml-1', isDarkMode ? 'text-gray-400' : 'text-gray-500']">Regex pattern</span>
+                    </label>
+                    <input
+                      v-model="prop.validationpattern"
+                      type="text"
+                      placeholder="e.g., ^[0-9]+$"
+                      :class="[
+                        'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200',
+                        isDarkMode 
+                          ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                          : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500',
+                        'border-gray-300'
+                      ]"
+                    />
+                    <p :class="['text-xs mt-1', isDarkMode ? 'text-gray-400' : 'text-gray-500']">
+                      Regular expression to validate the property value at design-time. Must be properly escaped for JSON. <strong>Design-time only - does not provide runtime validation.</strong>
+                    </p>
+                  </div>
+                  <div>
+                    <label :class="['block text-sm font-medium mb-1 transition-colors duration-200', isDarkMode ? 'text-gray-300' : 'text-gray-700']">
+                      Validation Message (Optional)
+                      <span :class="['text-xs font-normal ml-1', isDarkMode ? 'text-gray-400' : 'text-gray-500']">Error message</span>
+                    </label>
+                    <input
+                      v-model="prop.validationmessage"
+                      type="text"
+                      placeholder="e.g., Invalid value entered."
+                      :class="[
+                        'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200',
+                        isDarkMode 
+                          ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                          : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500',
+                        'border-gray-300'
+                      ]"
+                    />
+                    <p :class="['text-xs mt-1', isDarkMode ? 'text-gray-400' : 'text-gray-500']">
+                      If only pattern or only message is provided, the other uses defaults. <strong>Design-time only - does not provide runtime validation.</strong>
+                    </p>
+                  </div>
                 </div>
               </div>
               <div class="mt-4 flex justify-end">
@@ -477,7 +647,10 @@
               <h2 :class="['text-xl font-semibold transition-colors duration-200', isDarkMode ? 'text-white' : 'text-gray-900']">Control Events</h2>
               <div class="flex space-x-2">
               <button @click="showEventTemplates = !showEventTemplates" :class="[
-                'text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700',
+                'border font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center focus:ring-4 focus:outline-none',
+                isDarkMode 
+                  ? 'bg-gray-800 text-white border-gray-600 hover:bg-gray-700 hover:border-gray-600 focus:ring-gray-700' 
+                  : 'text-gray-900 bg-white border-gray-300 hover:bg-gray-100 focus:ring-gray-200',
                 isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
               ]">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -486,7 +659,10 @@
                 {{ showEventTemplates ? 'Hide Templates' : 'Event Templates' }}
               </button>
               <button @click="addEvent" :class="[
-                'text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-orange-600 dark:hover:bg-orange-700 dark:focus:ring-orange-300 hover:scale-105',
+                'text-white focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center hover:scale-105',
+                isDarkMode 
+                  ? 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-300' 
+                  : 'bg-blue-700 hover:bg-blue-800 focus:ring-blue-300',
                 isDarkMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-700 hover:bg-blue-800'
               ]">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -516,7 +692,10 @@
 
           <!-- Event Templates Section -->
           <div v-if="showEventTemplates" :class="[
-            'bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-4 transition-all duration-200',
+            'border rounded-lg shadow p-4 transition-all duration-200',
+            isDarkMode 
+              ? 'bg-dark-800 border-dark-700' 
+              : 'bg-white border-gray-200',
             isDarkMode ? 'border-dark-600 bg-dark-700' : 'border-gray-200 bg-gray-50'
           ]">
             <h3 :class="['text-lg font-medium mb-4 transition-colors duration-200', isDarkMode ? 'text-gray-200' : 'text-gray-900']">
@@ -562,7 +741,10 @@
               v-for="(event, index) in controlData.events"
               :key="index"
               :class="[
-                'bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-4 transition-all duration-200',
+                'border rounded-lg shadow p-4 transition-all duration-200',
+                isDarkMode 
+                  ? 'bg-dark-800 border-dark-700' 
+                  : 'bg-white border-gray-200',
                 isDarkMode ? 'border-dark-600 bg-dark-700' : 'border-gray-200 bg-gray-50'
               ]"
             >
@@ -574,7 +756,10 @@
                     type="text"
                     placeholder="e.g., customEvent"
                     :class="[
-                      'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200',
+                      'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200',
+                      isDarkMode 
+                        ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500',
                       validationErrors[`event_${index}_id`] ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     ]"
                     @blur="validateEvents"
@@ -587,7 +772,12 @@
                     v-model="event.displayname"
                     type="text"
                     placeholder="e.g., Custom Event"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200"
+                    :class="[
+                      'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200',
+                      isDarkMode 
+                        ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                    ]"
                   />
                 </div>
               </div>
@@ -615,7 +805,10 @@
 
           <!-- Info Box -->
           <div :class="[
-            'bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded transition-all duration-200 dark:bg-yellow-900/20 dark:border-yellow-500',
+            'border-l-4 p-4 rounded transition-all duration-200',
+            isDarkMode 
+              ? 'bg-yellow-900/20 border-yellow-500' 
+              : 'bg-yellow-50 border-yellow-400',
             isDarkMode ? 'bg-yellow-900/20 border-yellow-500' : 'bg-yellow-50 border-yellow-400'
           ]">
             <div class="flex items-start">
@@ -656,7 +849,10 @@
               v-for="(method, index) in controlData.methods"
               :key="index"
               :class="[
-                'bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-4 transition-all duration-200',
+                'border rounded-lg shadow p-4 transition-all duration-200',
+                isDarkMode 
+                  ? 'bg-dark-800 border-dark-700' 
+                  : 'bg-white border-gray-200',
                 isDarkMode ? 'border-dark-600 bg-dark-700' : 'border-gray-200 bg-gray-50'
               ]"
             >
@@ -668,7 +864,10 @@
                     type="text"
                     placeholder="e.g., refreshData"
                     :class="[
-                      'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200',
+                      'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200',
+                      isDarkMode 
+                        ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500',
                       validationErrors[`method_${index}_id`] ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     ]"
                     @blur="validateMethods"
@@ -682,7 +881,10 @@
                     type="text"
                     placeholder="e.g., Refresh Data"
                     :class="[
-                      'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200',
+                      'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200',
+                      isDarkMode 
+                        ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500',
                       validationErrors[`method_${index}_displayname`] ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                     ]"
                     @blur="validateMethods"
@@ -696,7 +898,12 @@
                   v-model="method.description"
                   rows="2"
                   placeholder="e.g., Refreshes the control's data from the server"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200"
+                  :class="[
+                    'border text-sm rounded-lg focus:ring-2 focus:border-blue-500 block w-full p-2.5 transition-all duration-200',
+                    isDarkMode 
+                      ? 'bg-dark-700 border-dark-600 text-white placeholder-gray-400 focus:ring-blue-500' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                  ]"
                 />
               </div>
               <div class="mt-4 flex justify-end">
@@ -722,7 +929,10 @@
           <!-- File Structure Options -->
           <div class="space-y-4">
             <div :class="[
-              'bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-4 transition-all duration-200',
+              'border rounded-lg shadow p-4 transition-all duration-200',
+            isDarkMode 
+              ? 'bg-dark-800 border-dark-700' 
+              : 'bg-white border-gray-200',
               isDarkMode ? 'border-dark-600 bg-dark-700' : 'border-gray-200 bg-gray-50'
             ]">
               <h3 :class="['text-lg font-medium mb-3 transition-colors duration-200', isDarkMode ? 'text-gray-200' : 'text-gray-900']">File Organization Strategy</h3>
@@ -766,7 +976,10 @@
 
             <!-- File Preview -->
             <div :class="[
-              'bg-gray-50 border border-gray-200 rounded-lg p-4 transition-all duration-200 dark:bg-gray-700 dark:border-gray-600',
+              'border rounded-lg p-4 transition-all duration-200',
+              isDarkMode 
+                ? 'bg-dark-700 border-dark-600' 
+                : 'bg-gray-50 border-gray-200',
               isDarkMode ? 'bg-dark-600' : 'bg-gray-50'
             ]">
               <h4 :class="['font-medium mb-2 transition-colors duration-200', isDarkMode ? 'text-gray-200' : 'text-gray-900']">Generated Files:</h4>
@@ -793,7 +1006,7 @@
           <h2 :class="['text-xl font-semibold transition-colors duration-200', isDarkMode ? 'text-white' : 'text-gray-900']">Preview & Generate</h2>
           
           <!-- Generated Files Preview -->
-          <div :class="['bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-4 transition-colors duration-200', isDarkMode ? 'bg-dark-700 border-dark-600' : 'bg-gray-50 border-gray-200']">
+          <div :class="['border rounded-lg shadow p-4 transition-colors duration-200', isDarkMode ? 'bg-dark-700 border-dark-600' : 'bg-gray-50 border-gray-200']">
             <h3 :class="['text-lg font-medium mb-2 transition-colors duration-200', isDarkMode ? 'text-gray-200' : 'text-gray-900']">Generated Files</h3>
             <div class="space-y-2">
               <div class="flex items-center space-x-2">
@@ -830,7 +1043,7 @@
           </div>
 
           <!-- Control Actions -->
-          <div :class="['bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-6 transition-colors duration-200', isDarkMode ? 'bg-dark-700 border-dark-600' : 'bg-gray-50 border-gray-200']">
+          <div :class="['border rounded-lg shadow p-6 transition-colors duration-200', isDarkMode ? 'bg-dark-700 border-dark-600' : 'bg-gray-50 border-gray-200']">
             <h3 :class="['text-lg font-semibold mb-4 transition-colors duration-200', isDarkMode ? 'text-gray-200' : 'text-gray-900']">
               Control Actions
             </h3>
@@ -842,7 +1055,10 @@
                 @click="loadIntoWorkbench"
                 :disabled="isLoadingIntoWorkbench"
                 :class="[
-                  'text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-orange-600 dark:hover:bg-orange-700 dark:focus:ring-orange-300 transition-all duration-200',
+                  'text-white focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center transition-all duration-200',
+                  isDarkMode 
+                    ? 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-300' 
+                    : 'bg-blue-700 hover:bg-blue-800 focus:ring-blue-300',
                   isLoadingIntoWorkbench 
                     ? 'opacity-50 cursor-not-allowed' 
                     : 'hover:scale-105',
@@ -862,7 +1078,10 @@
               <button
                 @click="generateControl"
                 :class="[
-                  'text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-orange-600 dark:hover:bg-orange-700 dark:focus:ring-orange-300 transition-all duration-200 hover:scale-105',
+                  'text-white focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center transition-all duration-200 hover:scale-105',
+                  isDarkMode 
+                    ? 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-300' 
+                    : 'bg-blue-700 hover:bg-blue-800 focus:ring-blue-300',
                   isDarkMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-700 hover:bg-blue-800'
                 ]"
               >
@@ -890,7 +1109,7 @@
           </div>
 
           <!-- Next Steps: Making Your Control Fully Functional -->
-          <div :class="['bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-6 transition-colors duration-200', isDarkMode ? 'bg-dark-700 border-dark-600' : 'bg-gray-50 border-gray-200']">
+          <div :class="['border rounded-lg shadow p-6 transition-colors duration-200', isDarkMode ? 'bg-dark-700 border-dark-600' : 'bg-gray-50 border-gray-200']">
             <h3 :class="['text-lg font-semibold mb-4 transition-colors duration-200', isDarkMode ? 'text-gray-200' : 'text-gray-900']">
               Next Steps: Making Your Control Fully Functional
             </h3>
@@ -934,7 +1153,7 @@
             <div>
               <h4 :class="['font-medium mb-3 transition-colors duration-200', isDarkMode ? 'text-gray-300' : 'text-gray-800']">Development Tips</h4>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div :class="['bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-4 transition-colors duration-200', isDarkMode ? 'border-dark-500 bg-dark-800' : 'border-gray-200 bg-white']">
+                <div :class="['border rounded-lg shadow p-4 transition-colors duration-200', isDarkMode ? 'border-dark-500 bg-dark-800' : 'border-gray-200 bg-white']">
                   <h5 :class="['font-medium mb-2 transition-colors duration-200', isDarkMode ? 'text-gray-200' : 'text-gray-900']">Styling</h5>
                   <ul :class="['text-sm space-y-1 transition-colors duration-200', isDarkMode ? 'text-gray-400' : 'text-gray-600']">
                     <li>• Use CSS custom properties for theming</li>
@@ -943,7 +1162,7 @@
                     <li>• Follow accessibility guidelines</li>
                   </ul>
                 </div>
-                <div :class="['bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-4 transition-colors duration-200', isDarkMode ? 'border-dark-500 bg-dark-800' : 'border-gray-200 bg-white']">
+                <div :class="['border rounded-lg shadow p-4 transition-colors duration-200', isDarkMode ? 'border-dark-500 bg-dark-800' : 'border-gray-200 bg-white']">
                   <h5 :class="['font-medium mb-2 transition-colors duration-200', isDarkMode ? 'text-gray-200' : 'text-gray-900']">Events</h5>
                   <ul :class="['text-sm space-y-1 transition-colors duration-200', isDarkMode ? 'text-gray-400' : 'text-gray-600']">
                     <li>• Use descriptive event names</li>
@@ -952,7 +1171,7 @@
                     <li>• Document event parameters</li>
                   </ul>
                 </div>
-                <div :class="['bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-4 transition-colors duration-200', isDarkMode ? 'border-dark-500 bg-dark-800' : 'border-gray-200 bg-white']">
+                <div :class="['border rounded-lg shadow p-4 transition-colors duration-200', isDarkMode ? 'border-dark-500 bg-dark-800' : 'border-gray-200 bg-white']">
                   <h5 :class="['font-medium mb-2 transition-colors duration-200', isDarkMode ? 'text-gray-200' : 'text-gray-900']">Properties</h5>
                   <ul :class="['text-sm space-y-1 transition-colors duration-200', isDarkMode ? 'text-gray-400' : 'text-gray-600']">
                     <li>• Use proper data types</li>
@@ -961,7 +1180,7 @@
                     <li>• Update UI when properties change</li>
                   </ul>
                 </div>
-                <div :class="['bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-4 transition-colors duration-200', isDarkMode ? 'border-dark-500 bg-dark-800' : 'border-gray-200 bg-white']">
+                <div :class="['border rounded-lg shadow p-4 transition-colors duration-200', isDarkMode ? 'border-dark-500 bg-dark-800' : 'border-gray-200 bg-white']">
                   <h5 :class="['font-medium mb-2 transition-colors duration-200', isDarkMode ? 'text-gray-200' : 'text-gray-900']">Testing</h5>
                   <ul :class="['text-sm space-y-1 transition-colors duration-200', isDarkMode ? 'text-gray-400' : 'text-gray-600']">
                     <li>• Test in different browsers</li>
@@ -984,7 +1203,10 @@
             v-if="currentStep > 1"
             @click="previousStep"
             :class="[
-              'text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200 hover:scale-105 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-600',
+              'border font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200 hover:scale-105 focus:ring-4 focus:outline-none',
+              isDarkMode 
+                ? 'bg-gray-800 text-white border-gray-600 hover:bg-gray-700 focus:ring-gray-600' 
+                : 'text-gray-900 bg-white border-gray-300 hover:bg-gray-100 focus:ring-gray-200',
               isDarkMode ? 'bg-gray-800 text-white border-gray-600 hover:bg-gray-700 focus:ring-gray-600' : ''
             ]"
           >
@@ -997,7 +1219,10 @@
             @click="nextStep"
             :disabled="!canProceed"
             :class="[
-              'text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200 dark:bg-orange-600 dark:hover:bg-orange-700 dark:focus:ring-orange-300',
+              'text-white focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200',
+              isDarkMode 
+                ? 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-300' 
+                : 'bg-blue-700 hover:bg-blue-800 focus:ring-blue-300',
               isDarkMode ? 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-300' : 'bg-blue-700 hover:bg-blue-800 focus:ring-blue-300',
               !canProceed ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
             ]"
@@ -1043,6 +1268,7 @@ export default {
       workbenchLoadStatus: null,
       validationErrors: {},
       showEventTemplates: false,
+      showDataTypesDropdown: false,
       steps: [
         { title: 'Basic Info' },
         { title: 'Properties' },
@@ -1101,7 +1327,8 @@ export default {
         iconFileType: null,
         useDefaultIcon: false,
         description: '',
-        standardProperties: ['Width', 'Height', 'IsVisible', 'IsEnabled'],
+        datatypes: [],
+        standardProperties: ['Width', 'Height', 'IsVisible', 'IsEnabled', 'TabIndex'],
         standardPropertyOverrides: {},
         customProperties: [],
         events: [],
@@ -1110,12 +1337,32 @@ export default {
           useSeparateFiles: true
         }
       },
+      availableDataTypes: [
+        { value: 'AutoGuid', label: 'AutoGuid - Auto-generated GUID values' },
+        { value: 'AutoNumber', label: 'AutoNumber - Auto-generated number values' },
+        { value: 'Date', label: 'Date - Date values (without time)' },
+        { value: 'DateTime', label: 'DateTime - Date and time values' },
+        { value: 'Decimal', label: 'Decimal - Decimal/numeric values' },
+        { value: 'File', label: 'File - File attachments' },
+        { value: 'Guid', label: 'Guid - GUID values' },
+        { value: 'Hyperlink', label: 'Hyperlink - Hyperlink/URL values' },
+        { value: 'Image', label: 'Image - Image data' },
+        { value: 'Label', label: 'Label - Label/text display' },
+        { value: 'Memo', label: 'Memo - Long text/memo values' },
+        { value: 'MultiValue', label: 'MultiValue - Multiple values' },
+        { value: 'Number', label: 'Number - Numeric values' },
+        { value: 'Text', label: 'Text - Text/string values' },
+        { value: 'Time', label: 'Time - Time values' },
+        { value: 'Xml', label: 'Xml - XML data' },
+        { value: 'YesNo', label: 'YesNo - Boolean/yes-no values' }
+      ],
       standardProperties: [
         { id: 'Width', name: 'Width', description: 'Control width' },
         { id: 'Height', name: 'Height', description: 'Control height' },
         { id: 'IsVisible', name: 'IsVisible', description: 'Control visibility' },
         { id: 'IsEnabled', name: 'IsEnabled', description: 'Control enabled state' },
         { id: 'IsReadOnly', name: 'IsReadOnly', description: 'Read-only state' },
+        { id: 'TabIndex', name: 'TabIndex', description: 'Keyboard tab order (0 default, -1 removes focus)' },
         { id: 'DataBinding', name: 'DataBinding', description: 'Enable data binding support (listdata properties)' }
         // { id: 'Format', name: 'Format', description: 'Data format' } // TODO: Implement format functionality
       ],
@@ -1128,9 +1375,17 @@ export default {
         case 1:
           return this.controlData.displayName && this.controlData.tagName && !this.validationErrors.displayName && !this.validationErrors.tagName && (this.controlData.useDefaultIcon || this.controlData.iconFile)
         case 2:
+          // Check for standard property override validation errors
+          return !Object.keys(this.validationErrors).some(key => key.startsWith('standardProp_'))
         case 3:
+          // Check for custom property validation errors
+          return !Object.keys(this.validationErrors).some(key => key.startsWith('customProp_'))
         case 4:
+          // Check for event validation errors
+          return !Object.keys(this.validationErrors).some(key => key.startsWith('event_'))
         case 5:
+          // Check for method validation errors
+          return !Object.keys(this.validationErrors).some(key => key.startsWith('method_'))
         case 6:
           return true
         default:
@@ -1193,9 +1448,52 @@ export default {
           }
         })
       }
+    },
+    currentStep(newStep) {
+      // Validate when entering step 2 (standard properties)
+      if (newStep === 2) {
+        this.$nextTick(() => {
+          this.validateStandardPropertyOverrides()
+        })
+      }
+    },
+    'controlData.standardPropertyOverrides': {
+      handler() {
+        // Validate Width when standard property overrides change
+        if (this.currentStep === 2) {
+          this.$nextTick(() => {
+            this.validateStandardPropertyOverrides()
+          })
+        }
+      },
+      deep: true
     }
   },
+  mounted() {
+    // Close dropdown when clicking outside
+    document.addEventListener('click', this.handleClickOutside)
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleClickOutside)
+  },
   methods: {
+    handleClickOutside(event) {
+      // Close dropdown if clicking outside the data types dropdown
+      if (this.showDataTypesDropdown && !event.target.closest('.data-types-dropdown')) {
+        this.showDataTypesDropdown = false
+      }
+    },
+    toggleDataTypesDropdown() {
+      this.showDataTypesDropdown = !this.showDataTypesDropdown
+    },
+    toggleDataType(value) {
+      const index = this.controlData.datatypes.indexOf(value)
+      if (index > -1) {
+        this.controlData.datatypes.splice(index, 1)
+      } else {
+        this.controlData.datatypes.push(value)
+      }
+    },
     validateField(fieldName) {
       const value = this.controlData[fieldName]
       if (fieldName === 'icon') {
@@ -1425,6 +1723,14 @@ export default {
               'Initial value contains "\\n" or "\\r" which K2 will interpret as newlines and break runtime. Use a single-line value instead.'
             hasErrors = true
           }
+          // Validate Width property - must match K2's validation rules
+          if (prop.id === 'Width') {
+            const widthValidation = this.validateWidthValue(prop.initialvalue)
+            if (!widthValidation.valid) {
+              this.validationErrors[`customProp_${index}_initialvalue`] = widthValidation.error
+              hasErrors = true
+            }
+          }
         }
       })
       return !hasErrors
@@ -1446,6 +1752,77 @@ export default {
       })
       return !hasErrors
     },
+    validateWidthValue(value) {
+      // Empty value is valid (defaults to container width)
+      if (!value || value.trim() === '') {
+        return { valid: true, error: null }
+      }
+      
+      const trimmedValue = String(value).trim()
+      const errorMessage = 'You have entered an invalid width. Only whole numbers, percentages not exceeding 100% and pixel values up to 32767px are supported.'
+      
+      // Cannot be "auto"
+      if (trimmedValue.toLowerCase() === 'auto') {
+        return { valid: false, error: errorMessage }
+      }
+      
+      // Check for percentage (e.g., "50%", "100%", "50.5%")
+      // Percentages can have decimals, but must not exceed 100%
+      const percentMatch = trimmedValue.match(/^(\d+(?:\.\d+)?)%$/)
+      if (percentMatch) {
+        const percentValue = parseFloat(percentMatch[1])
+        if (percentValue > 100 || percentValue < 0) {
+          return { valid: false, error: errorMessage }
+        }
+        return { valid: true, error: null }
+      }
+      
+      // Check for pixel values (e.g., "100px", "32767px")
+      // Must be whole numbers only (no decimals)
+      const pixelMatch = trimmedValue.match(/^(\d+)px$/i)
+      if (pixelMatch) {
+        const pixelValue = parseInt(pixelMatch[1], 10)
+        if (pixelValue > 32767 || pixelValue < 0 || isNaN(pixelValue)) {
+          return { valid: false, error: errorMessage }
+        }
+        return { valid: true, error: null }
+      }
+      
+      // Check for whole numbers (treated as pixels, e.g., "100" = "100px")
+      // Must be whole numbers only (no decimals)
+      const wholeNumberMatch = trimmedValue.match(/^\d+$/)
+      if (wholeNumberMatch) {
+        const numberValue = parseInt(wholeNumberMatch[0], 10)
+        if (numberValue > 32767 || numberValue < 0 || isNaN(numberValue)) {
+          return { valid: false, error: errorMessage }
+        }
+        return { valid: true, error: null }
+      }
+      
+      // Invalid format
+      return { valid: false, error: errorMessage }
+    },
+    validateStandardPropertyOverrides() {
+      // Clear previous validation errors for standard property overrides
+      Object.keys(this.validationErrors).forEach(key => {
+        if (key.startsWith('standardProp_')) {
+          delete this.validationErrors[key]
+        }
+      })
+
+      let hasErrors = false
+      
+      // Validate Width property override - must match K2's validation rules
+      if (this.controlData.standardPropertyOverrides && this.controlData.standardPropertyOverrides.Width) {
+        const widthValidation = this.validateWidthValue(this.controlData.standardPropertyOverrides.Width)
+        if (!widthValidation.valid) {
+          this.validationErrors['standardProp_Width'] = widthValidation.error
+          hasErrors = true
+        }
+      }
+      
+      return !hasErrors
+    },
     nextStep() {
       if (this.currentStep === 1) {
         // Validate all required fields for step 1
@@ -1454,6 +1831,11 @@ export default {
         this.validateField('icon')
         
         if (Object.keys(this.validationErrors).length > 0) {
+          return
+        }
+      } else if (this.currentStep === 2) {
+        // Validate standard property overrides
+        if (!this.validateStandardPropertyOverrides()) {
           return
         }
       } else if (this.currentStep === 3) {
@@ -1701,7 +2083,8 @@ export default {
         'Height': 'e.g., 100px', 
         'IsVisible': 'true',
         'IsEnabled': 'true',
-        'IsReadOnly': 'false'
+        'IsReadOnly': 'false',
+        'TabIndex': '0 (default tab order)'
         // 'Format': 'e.g., currency' // TODO: Implement format functionality
       }
       return placeholders[propId] || ''
@@ -1712,10 +2095,25 @@ export default {
         'Height': 'string',
         'IsVisible': 'bool',
         'IsEnabled': 'bool', 
-        'IsReadOnly': 'bool'
+        'IsReadOnly': 'bool',
+        'TabIndex': 'string'
         // 'Format': 'string' // TODO: Implement format functionality
       }
       return types[propId] || 'string'
+    },
+    getStandardPropertyInputType(propId) {
+      const numberProps = new Set(['TabIndex'])
+      return numberProps.has(propId) ? 'number' : 'text'
+    },
+    getStandardPropertyInputAttrs(propId) {
+      if (propId === 'TabIndex') {
+        return {
+          step: '1',
+          min: '-1',
+          inputmode: 'numeric'
+        }
+      }
+      return {}
     },
     createManifest() {
       // Process custom properties - convert boolean to bool, text to string, and use ID as friendly name if not provided
@@ -1725,6 +2123,14 @@ export default {
           friendlyname: prop.friendlyname || prop.id, // Use ID as fallback
           type: prop.type === 'boolean' ? 'bool' : (prop.type === 'text' ? 'string' : prop.type),
           initialvalue: prop.initialvalue || ''
+        }
+        
+        // Add validation fields if provided
+        if (prop.validationpattern && prop.validationpattern.trim()) {
+          baseProp.validationpattern = prop.validationpattern.trim()
+        }
+        if (prop.validationmessage && prop.validationmessage.trim()) {
+          baseProp.validationmessage = prop.validationmessage.trim()
         }
         
         // For listdata properties, add required fields
@@ -1778,14 +2184,27 @@ export default {
         supports.push('DataBinding')
       }
       
+      // Build base manifest object
       const manifest = {
         icon: this.controlData.icon,
         displayName: this.controlData.displayName,
-        tagName: this.controlData.tagName,
-        supports: supports, // Include DataBinding if needed
-        events: processedEvents,
-        properties: [...standardOverrides, ...processedCustomProperties] // Add overrides to properties
+        tagName: this.controlData.tagName
       }
+
+      // Add description if provided (after tagName)
+      if (this.controlData.description && this.controlData.description.trim()) {
+        manifest.description = this.controlData.description.trim()
+      }
+
+      // Add datatypes if any are selected (after tagName/description, before supports)
+      if (this.controlData.datatypes && this.controlData.datatypes.length > 0) {
+        manifest.datatypes = [...this.controlData.datatypes]
+      }
+
+      // Add supports, events, and properties
+      manifest.supports = supports // Include DataBinding if needed
+      manifest.events = processedEvents
+      manifest.properties = [...standardOverrides, ...processedCustomProperties] // Add overrides to properties
 
       // Always include required files - the choice is about file organization
       if (this.controlData.files.useSeparateFiles) {
@@ -1800,6 +2219,12 @@ export default {
         manifest.runtimeStyleFileNames = ['control.css']
         manifest.designtimeScriptFileNames = ['control.js']
         manifest.designtimeStyleFileNames = ['control.css']
+      }
+
+      // Final check: ensure datatypes are included if they exist
+      // This is a safety check to ensure datatypes are never lost
+      if (this.controlData.datatypes && this.controlData.datatypes.length > 0 && !manifest.datatypes) {
+        manifest.datatypes = [...this.controlData.datatypes]
       }
 
       return manifest

@@ -25,6 +25,7 @@ Welcome to the Control Dojo documentation! This is your reference guide for crea
 - **[Responsive Controls](./Responsive%20Controls.md)** - Making controls responsive with Shadow DOM and width overrides
 - **[Style Integration](./Style%20Integration.md)** - Integrating with K2 form styling using CSS variables
 - **[Localization](./Localization.md)** - Multi-language support and RTL (right-to-left) layout
+- **[Accessibility](./Accessibility.md)** - Making controls accessible for screen readers and WCAG compliance
 
 ## Learning Path
 
@@ -81,7 +82,7 @@ The Control Dojo includes four example controls that demonstrate best practices:
 - **Location:** `Controls/Button List/`
 
 ### 4. Drag and Drop (`drag-and-drop-control`)
-- **Features:** Accessible drop surface, click-to-browse fallback, automatic file preview, MaxSize enforcement, borderless mode
+- **Features:** Accessible drop surface, click-to-browse fallback, automatic file preview, MaxSize enforcement, borderless mode, file download from server
 - **See:** [Standard Properties](./Standard%20Properties.md) | [Responsive Controls](./Responsive%20Controls.md)
 - **Location:** `Controls/Drag and Drop/`
 
@@ -210,6 +211,21 @@ docs/
 2. Set `direction: rtl` in CSS
 3. Use Arabic font stack
 4. Use RTL-aware layout (Grid/Flexbox with order)
+
+### I want to make my control accessible
+1. Read [Accessibility](./Accessibility.md)
+2. Add keyboard navigation (tabindex, keydown handlers)
+3. Add ARIA labels and roles
+4. Implement focus indicators
+5. Add live regions for dynamic content
+6. Test with screen readers
+
+### I want to create a file upload/download control
+1. Study Drag and Drop control (`Controls/Drag and Drop/`)
+2. Extend `K2BaseControl` to inherit `uploadFile()` and `downloadFile()` methods
+3. Implement file serialization using collection XML format
+4. Handle file paths, data URLs, and file size display
+5. See Drag and Drop README for complete implementation patterns
 
 ## Tips
 

@@ -19,6 +19,22 @@ The validation system requires a specific method signature and configuration:
 
 What if you declare `Validate` in the manifest but don't actually implement it? K2 falls back to default validation behavior. If you've got `getValue` and `setValue` methods, K2's standard validation (like checking for empty fields) will still work.
 
+### Design-time property validation
+
+**Important:** Manifest property validation via `validationpattern` and `validationmessage` is **ONLY for design-time validation** in the K2 Designer. These fields do NOT provide runtime validation.
+
+- Manifest property validation is available for all property types via `validationpattern` and `validationmessage` (design-time only).  
+- The `int` type also ships with default range validation and a default message when inputs are non-numeric or exceed the 32-bit range (design-time only). The default message is: "You have entered an invalid value. Only numbers between -2147483648 and 2147483647 are supported."
+- If only one of these fields is defined, the other uses the default for that type (for `int`, the default range check/message still applies).  
+- Validation messages should not include property name placeholders (like `{0}`) as this breaks K2 localization. Default validation messages do not include the property name - they simply state "You have entered an invalid value."  
+- Initial values are not checked against the pattern; validation runs on user edits at design time. See [Manifest Configuration](./Manifest%20Configuration.md#validation-fields-for-properties-design-time-only) for examples.
+
+**Why Design-time Only?**
+- Runtime validation can be handled by developers in their JavaScript code using any validation logic they need
+- The design-time validation helps ensure property values are correct when configuring controls in the designer
+- It does not restrict what values can be set programmatically at runtime
+- For integration with K2's validation system, you can implement the `Validate()` method as described in this guide
+
 ### Error Handling
 
 **Important**: Here's a gotcha—if something's wrong with your return type or method definition, K2 won't throw errors. Instead, validation just passes silently. That prevents users from getting blocked by misconfigured controls, but it also means you could ship broken validation without realizing it. Test thoroughly.

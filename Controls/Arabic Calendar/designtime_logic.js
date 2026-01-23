@@ -90,11 +90,20 @@ if (!window.customElements.get('arabic-calendar')) {
     safeRaisePropertyChanged(this, 'IsReadOnly');
   }
 
+  get TabIndex() { return this._tabIndex; }
+  set TabIndex(val) {
+    this._tabIndex = val || "0";
+    if (this._hasRendered && this.input && this.input.length > 0) {
+      this.input[0].setAttribute("tabindex", this._tabIndex);
+    }
+    safeRaisePropertyChanged(this, 'TabIndex');
+  }
+
   // Simplified template for designtime preview only (no popup or interactivity)
   _TEMPLATE = `
       <div class="container empty">
         <div class="input-wrap">
-          <input type="text" class="date-input" placeholder="اضغط الزر لاختيار التاريخ" readonly aria-haspopup="dialog" aria-expanded="false" aria-controls="k2-cal-popup"/>
+          <input type="text" class="date-input" tabindex="${this._tabIndex}" placeholder="اضغط الزر لاختيار التاريخ" readonly aria-haspopup="dialog" aria-expanded="false" aria-controls="k2-cal-popup"/>
           <span class="floating-watermark">اضغط الزر لاختيار التاريخ</span>
           <div class="icon-background"></div>
         </div>
@@ -115,6 +124,7 @@ if (!window.customElements.get('arabic-calendar')) {
   _isVisible = true;
   _isEnabled = true;
   _isReadOnly = false;
+  _tabIndex = "0";
 
   constructor() { super(); }
 
@@ -334,6 +344,7 @@ if (!window.customElements.get('arabic-calendar')) {
     this.IsVisible = this._isVisible;
     this.IsEnabled = this._isEnabled;
     this.IsReadOnly = this._isReadOnly;
+    this.TabIndex = this._tabIndex;
     if (this._value) this.container.classList.remove('empty');
     else this.container.classList.add('empty');
 

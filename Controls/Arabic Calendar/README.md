@@ -42,6 +42,7 @@ The K2 Arabic Calendar control is designed specifically for Arabic-speaking user
 | **Width** | Number | `""` | Number or string with unit | Control width |
 | **IsVisible** | Boolean | `true` | `true`, `false` | Control visibility |
 | **IsEnabled** | Boolean | `true` | `true`, `false` | Control interactivity |
+| **TabIndex** | String | `"0"` | Any string | Tab order for keyboard navigation |
 
 ### Core Properties
 
@@ -161,6 +162,15 @@ The K2 Arabic Calendar control is designed specifically for Arabic-speaking user
   control.IsEnabled = false; // Disable control
   ```
 
+#### TabIndex
+- **Type**: String
+- **Default**: `"0"`
+- **Description**: Tab order index for keyboard navigation
+- **Usage**:
+  ```javascript
+  control.TabIndex = "1"; // Set tab order
+  ```
+
 ## Events
 
 ### Quick Reference
@@ -171,6 +181,7 @@ The K2 Arabic Calendar control is designed specifically for Arabic-speaking user
 | **Focus** | Control receives focus | None | Yes |
 | **Blur** | Control loses focus | None | Yes |
 | **ValidationError** | Invalid date input | `{ message: string, value: string }` | Yes |
+| **Rendered** | Control finishes initial rendering | None | Yes |
 
 ### Event Details
 

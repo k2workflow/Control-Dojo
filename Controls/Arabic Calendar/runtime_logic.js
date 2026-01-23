@@ -119,13 +119,22 @@ if (!window.customElements.get('arabic-calendar')) {
     this.setAttribute('dateformat', val);
     safeRaisePropertyChanged(this, 'DateFormat');
   }
+
+  get TabIndex() { return this._tabIndex; }
+  set TabIndex(val) {
+    this._tabIndex = val || "0";
+    if (this._hasRendered && this.input && this.input.length > 0) {
+      this.input[0].setAttribute("tabindex", this._tabIndex);
+    }
+    safeRaisePropertyChanged(this, 'TabIndex');
+  }
   
 
   // Template without styles (CSS is external)
   _TEMPLATE = `
       <div class="container empty">
         <div class="input-wrap">
-          <input type="text" class="date-input" aria-haspopup="dialog" aria-expanded="false" aria-controls="k2-cal-popup"/>
+          <input type="text" class="date-input" tabindex="${this._tabIndex}" aria-haspopup="dialog" aria-expanded="false" aria-controls="k2-cal-popup"/>
           <span class="floating-watermark">اضغط الزر لاختيار التاريخ</span>
           <div class="icon-background"></div>
         </div>
@@ -170,6 +179,7 @@ if (!window.customElements.get('arabic-calendar')) {
   _isValid = true;
   _logPrefix = '[arabic-calendar]';
   _isProgrammaticValue = false; // Flag to track programmatically set values
+  _tabIndex = "0";
   
   // Picker state management
   _currentView = 'days'; // 'days', 'months', 'years'
@@ -222,6 +232,7 @@ if (!window.customElements.get('arabic-calendar')) {
     this.Width = this._width;
     this.IsVisible = this._isVisible;
     this.IsEnabled = this._isEnabled;
+    this.TabIndex = this._tabIndex;
     if (this._value && this._value.trim() !== '') {
       this.container.classList.remove('empty');
       // Hide watermark when there's a value

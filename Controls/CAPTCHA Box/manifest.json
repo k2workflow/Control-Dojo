@@ -19,6 +19,7 @@
   "displayName": "CAPTCHA Box",
   "tagName": "captcha-control",
   "valuePropertyID": "CaptchaResponse",
+  "datatypes": ["Text"],
   "supports": [
     "Value",
     "Width",

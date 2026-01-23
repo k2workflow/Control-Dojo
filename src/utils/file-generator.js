@@ -224,12 +224,26 @@ if (typeof K2 !== 'undefined' && K2.IsDesigner) {
     }
 
     // Process custom properties - convert boolean to bool, text to string, and use ID as friendly name if not provided
-    const processedCustomProperties = controlData.customProperties.map(prop => ({
-      id: prop.id,
-      friendlyname: prop.friendlyname || prop.id,
-      type: prop.type === 'boolean' ? 'bool' : (prop.type === 'text' ? 'string' : prop.type),
-      initialvalue: prop.initialvalue || ''
-    }))
+    const processedCustomProperties = controlData.customProperties.map(prop => {
+      const baseProp = {
+        id: prop.id,
+        friendlyname: prop.friendlyname || prop.id,
+        type: prop.type === 'boolean' ? 'bool' : (prop.type === 'text' ? 'string' : prop.type),
+        initialvalue: prop.initialvalue || ''
+      }
+      
+      // For int type, convert initialvalue to number if it's a valid number string, otherwise keep as string
+      // This allows both "0" and 0 to work (K2 accepts both)
+      if (prop.type === 'int' && baseProp.initialvalue) {
+        const numValue = Number(baseProp.initialvalue)
+        if (!isNaN(numValue) && isFinite(numValue) && Number.isInteger(numValue)) {
+          // Use number if it's a valid integer, otherwise keep as string (will be validated by K2)
+          baseProp.initialvalue = numValue
+        }
+      }
+      
+      return baseProp
+    })
 
     // Process standard property overrides
     const standardOverrides = Object.keys(controlData.standardPropertyOverrides || {})
@@ -259,12 +273,24 @@ if (typeof K2 !== 'undefined' && K2.IsDesigner) {
     const manifest = {
       icon: iconName,
       displayName: controlData.displayName,
-      tagName: controlData.tagName,
-      supports: controlData.standardProperties, // Keep ALL standard properties in supports
-      events: processedEvents,
-      properties: [...standardOverrides, ...processedCustomProperties], // Add overrides to properties
-      methods: processedMethods.length > 0 ? processedMethods : undefined
+      tagName: controlData.tagName
     }
+
+    // Add description if provided (after tagName)
+    if (controlData.description && controlData.description.trim()) {
+      manifest.description = controlData.description.trim()
+    }
+
+    // Add datatypes if any are selected (after tagName/description, before supports)
+    if (controlData.datatypes && Array.isArray(controlData.datatypes) && controlData.datatypes.length > 0) {
+      manifest.datatypes = [...controlData.datatypes]
+    }
+
+    // Add supports, events, and properties
+    manifest.supports = controlData.standardProperties // Keep ALL standard properties in supports
+    manifest.events = processedEvents
+    manifest.properties = [...standardOverrides, ...processedCustomProperties] // Add overrides to properties
+    manifest.methods = processedMethods.length > 0 ? processedMethods : undefined
 
     // Remove methods if empty to keep manifest clean
     if (!manifest.methods || manifest.methods.length === 0) {
@@ -431,6 +457,7 @@ if (typeof K2 !== 'undefined' && K2.IsDesigner) {
       'IsVisible': 'bool',
       'IsEnabled': 'bool', 
       'IsReadOnly': 'bool',
+      'TabIndex': 'string',
       'Format': 'string'
     }
     return types[propId] || 'string'

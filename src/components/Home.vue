@@ -15,10 +15,10 @@
 
     <!-- Important Notice about Previews -->
     <div class="max-w-6xl mx-auto mb-12">
-      <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-500 p-6 rounded-lg shadow-md">
+      <div :class="['border-l-4 p-6 rounded-lg shadow-md', isDarkMode ? 'bg-yellow-900/20 border-yellow-500' : 'bg-yellow-50 border-yellow-400']">
         <div class="flex items-start">
           <div class="flex-shrink-0">
-            <svg class="h-6 w-6 text-yellow-400 dark:text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+            <svg :class="['h-6 w-6', isDarkMode ? 'text-yellow-500' : 'text-yellow-400']" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
             </svg>
           </div>
@@ -42,7 +42,7 @@
       <h2 class="text-2xl font-bold mb-6" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
         What is Control Dojo?
       </h2>
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+      <div :class="['rounded-lg shadow-md p-6 mb-6', isDarkMode ? 'bg-dark-800' : 'bg-white']">
         <p class="text-base leading-relaxed mb-4" :class="isDarkMode ? 'text-gray-300' : 'text-gray-700'">
           Control Dojo is a development utility specifically designed for K2 custom control developers. It provides resources to create, test, debug and validate custom controls before deploying them to a K2 environment.
         </p>
@@ -57,7 +57,7 @@
       <h2 class="text-2xl font-bold mb-6" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
         Getting Started
       </h2>
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-4">
+      <div :class="['rounded-lg shadow-md p-6 space-y-4', isDarkMode ? 'bg-dark-800' : 'bg-white']">
         <p class="text-base leading-relaxed mb-4" :class="isDarkMode ? 'text-gray-300' : 'text-gray-700'">
           Ready to start developing custom controls? Navigate to the <a href="#" @click.prevent="switchTab('Inspector')" data-tab-switch="true" class="font-semibold underline transition-colors duration-200" :class="isDarkMode ? 'text-orange-400 hover:text-orange-300' : 'text-blue-600 hover:text-blue-700'">Inspector</a> tab to debug existing controls, or visit <a href="#" @click.prevent="switchTab('Wizard')" data-tab-switch="true" class="font-semibold underline transition-colors duration-200" :class="isDarkMode ? 'text-orange-400 hover:text-orange-300' : 'text-blue-600 hover:text-blue-700'">Control Starter</a> to generate a starter template. Check out the <a href="#" @click.prevent="switchTab('Documents')" data-tab-switch="true" class="font-semibold underline transition-colors duration-200" :class="isDarkMode ? 'text-orange-400 hover:text-orange-300' : 'text-blue-600 hover:text-blue-700'">Documents</a> tab for detailed guides and reference materials.
         </p>
@@ -75,7 +75,7 @@
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Control Starter Tab -->
-        <a href="#" @click.prevent="switchTab('Wizard')" data-tab-switch="true" class="block bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition-shadow duration-200 cursor-pointer">
+        <a href="#" @click.prevent="switchTab('Wizard')" data-tab-switch="true" :class="['block rounded-lg shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition-shadow duration-200 cursor-pointer', isDarkMode ? 'bg-dark-800' : 'bg-white']">
           <div class="flex items-center mb-4">
             <svg class="w-6 h-6 mr-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -114,9 +114,9 @@
         </a>
 
         <!-- Inspector Tab -->
-        <a href="#" @click.prevent="switchTab('Inspector')" data-tab-switch="true" class="block bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-blue-500 dark:border-orange-500 hover:shadow-lg transition-shadow duration-200 cursor-pointer">
+        <a href="#" @click.prevent="switchTab('Inspector')" data-tab-switch="true" :class="['block rounded-lg shadow-md p-6 border-l-4 hover:shadow-lg transition-shadow duration-200 cursor-pointer', isDarkMode ? 'bg-dark-800 border-orange-500' : 'bg-white border-blue-500']">
           <div class="flex items-center mb-4">
-            <svg class="w-6 h-6 mr-3 text-blue-500 dark:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg :class="['w-6 h-6 mr-3', isDarkMode ? 'text-orange-500' : 'text-blue-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <h3 class="text-xl font-semibold" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Inspector</h3>
@@ -126,43 +126,43 @@
           </p>
           <ul class="text-sm space-y-2" :class="isDarkMode ? 'text-gray-400' : 'text-gray-600'">
             <li class="flex items-start">
-              <svg class="w-4 h-4 text-blue-500 dark:text-orange-500 mr-2 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg :class="['w-4 h-4 mr-2 mt-1 flex-shrink-0', isDarkMode ? 'text-orange-500' : 'text-blue-500']" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
               <span>Preview controls in Designer and Runtime modes</span>
             </li>
             <li class="flex items-start">
-              <svg class="w-4 h-4 text-blue-500 dark:text-orange-500 mr-2 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg :class="['w-4 h-4 mr-2 mt-1 flex-shrink-0', isDarkMode ? 'text-orange-500' : 'text-blue-500']" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
               <span>Modify properties and see real-time updates</span>
             </li>
             <li class="flex items-start">
-              <svg class="w-4 h-4 text-blue-500 dark:text-orange-500 mr-2 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg :class="['w-4 h-4 mr-2 mt-1 flex-shrink-0', isDarkMode ? 'text-orange-500' : 'text-blue-500']" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
               <span>Test custom events and trigger methods</span>
             </li>
             <li class="flex items-start">
-              <svg class="w-4 h-4 text-blue-500 dark:text-orange-500 mr-2 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg :class="['w-4 h-4 mr-2 mt-1 flex-shrink-0', isDarkMode ? 'text-orange-500' : 'text-blue-500']" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
               <span>Execute control methods and see results in preview</span>
             </li>
             <li class="flex items-start">
-              <svg class="w-4 h-4 text-blue-500 dark:text-orange-500 mr-2 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg :class="['w-4 h-4 mr-2 mt-1 flex-shrink-0', isDarkMode ? 'text-orange-500' : 'text-blue-500']" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
               <span>Enable/disable scripts and styles for debugging</span>
             </li>
             <li class="flex items-start">
-              <svg class="w-4 h-4 text-blue-500 dark:text-orange-500 mr-2 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg :class="['w-4 h-4 mr-2 mt-1 flex-shrink-0', isDarkMode ? 'text-orange-500' : 'text-blue-500']" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
               <span>Export controls as ZIP archives</span>
             </li>
             <li class="flex items-start">
-              <svg class="w-4 h-4 text-blue-500 dark:text-orange-500 mr-2 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg :class="['w-4 h-4 mr-2 mt-1 flex-shrink-0', isDarkMode ? 'text-orange-500' : 'text-blue-500']" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
               <span>Refresh button to reload frames without full page reload</span>
@@ -183,7 +183,7 @@
         </a>
 
         <!-- Documents Tab -->
-        <a href="#" @click.prevent="switchTab('Documents')" data-tab-switch="true" class="block bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-purple-500 md:col-span-2 hover:shadow-lg transition-shadow duration-200 cursor-pointer">
+        <a href="#" @click.prevent="switchTab('Documents')" data-tab-switch="true" :class="['block rounded-lg shadow-md p-6 border-l-4 border-purple-500 md:col-span-2 hover:shadow-lg transition-shadow duration-200 cursor-pointer', isDarkMode ? 'bg-dark-800' : 'bg-white']">
           <div class="flex items-center mb-4">
             <svg class="w-6 h-6 mr-3 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -237,13 +237,13 @@
       
       <div class="space-y-4">
         <!-- How to Use Inspector -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border-l-4 border-blue-500 dark:border-orange-500 overflow-hidden">
+        <div :class="['rounded-lg shadow-md border-l-4 overflow-hidden', isDarkMode ? 'bg-dark-800 border-orange-500' : 'bg-white border-blue-500']">
           <button
             @click="toggleHowTo('inspector')"
-            class="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            :class="['w-full px-6 py-4 flex items-center justify-between transition-colors duration-200', isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50']"
           >
             <div class="flex items-center">
-              <svg class="w-5 h-5 mr-3 text-blue-500 dark:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg :class="['w-5 h-5 mr-3', isDarkMode ? 'text-orange-500' : 'text-blue-500']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <h3 class="text-lg font-semibold text-left" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
@@ -270,8 +270,8 @@
           >
             <div class="space-y-4 pt-2">
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-orange-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-blue-700 dark:text-orange-400">1</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-orange-900/30' : 'bg-blue-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-orange-400' : 'text-blue-700']">1</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Load a Control</h4>
@@ -290,8 +290,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-orange-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-blue-700 dark:text-orange-400">2</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-orange-900/30' : 'bg-blue-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-orange-400' : 'text-blue-700']">2</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Preview the Control</h4>
@@ -305,8 +305,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-orange-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-blue-700 dark:text-orange-400">3</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-orange-900/30' : 'bg-blue-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-orange-400' : 'text-blue-700']">3</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Modify Properties</h4>
@@ -317,8 +317,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-orange-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-blue-700 dark:text-orange-400">4</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-orange-900/30' : 'bg-blue-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-orange-400' : 'text-blue-700']">4</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Test Events</h4>
@@ -329,8 +329,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-orange-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-blue-700 dark:text-orange-400">5</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-orange-900/30' : 'bg-blue-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-orange-400' : 'text-blue-700']">5</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Execute Methods</h4>
@@ -341,8 +341,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-orange-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-blue-700 dark:text-orange-400">6</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-orange-900/30' : 'bg-blue-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-orange-400' : 'text-blue-700']">6</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Debug Scripts and Styles</h4>
@@ -353,8 +353,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-orange-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-blue-700 dark:text-orange-400">7</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-orange-900/30' : 'bg-blue-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-orange-400' : 'text-blue-700']">7</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Export Your Control</h4>
@@ -368,10 +368,10 @@
         </div>
 
         <!-- How to Use Control Starter -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border-l-4 border-green-500 overflow-hidden">
+        <div :class="['rounded-lg shadow-md border-l-4 border-green-500 overflow-hidden', isDarkMode ? 'bg-dark-800' : 'bg-white']">
           <button
             @click="toggleHowTo('createControl')"
-            class="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            :class="['w-full px-6 py-4 flex items-center justify-between transition-colors duration-200', isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50']"
           >
             <div class="flex items-center">
               <svg class="w-5 h-5 mr-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,8 +401,8 @@
           >
             <div class="space-y-4 pt-2">
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-green-700 dark:text-green-400">1</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-green-900/30' : 'bg-green-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-green-400' : 'text-green-700']">1</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Basic Information</h4>
@@ -413,8 +413,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-green-700 dark:text-green-400">2</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-green-900/30' : 'bg-green-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-green-400' : 'text-green-700']">2</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Standard Properties</h4>
@@ -425,8 +425,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-green-700 dark:text-green-400">3</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-green-900/30' : 'bg-green-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-green-400' : 'text-green-700']">3</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Custom Properties</h4>
@@ -437,8 +437,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-green-700 dark:text-green-400">4</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-green-900/30' : 'bg-green-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-green-400' : 'text-green-700']">4</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Define Events</h4>
@@ -449,8 +449,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-green-700 dark:text-green-400">5</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-green-900/30' : 'bg-green-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-green-400' : 'text-green-700']">5</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Add Methods</h4>
@@ -461,8 +461,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-green-700 dark:text-green-400">6</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-green-900/30' : 'bg-green-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-green-400' : 'text-green-700']">6</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Choose File Structure</h4>
@@ -473,8 +473,8 @@
               </div>
               
               <div class="flex items-start">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-4">
-                  <span class="text-sm font-semibold text-green-700 dark:text-green-400">7</span>
+                <div :class="['flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-4', isDarkMode ? 'bg-green-900/30' : 'bg-green-100']">
+                  <span :class="['text-sm font-semibold', isDarkMode ? 'text-green-400' : 'text-green-700']">7</span>
                 </div>
                 <div class="flex-1">
                   <h4 class="font-semibold mb-1" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Generate and Download</h4>

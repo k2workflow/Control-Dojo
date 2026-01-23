@@ -984,7 +984,15 @@ if (!window.customElements.get('drag-drop-control')) {
                 <span class="secondary">${localizedSecondary}</span>
               </div>
               <div class="file-preview" aria-hidden="true">
-                <span class="file-name"></span>
+                <div class="file-name-container">
+                  <span class="file-name"></span>
+                  <button type="button" class="download-file-button" title="Download file" aria-label="Download file" style="display: none;">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M12 2v16m0 0l-5-5m5 5l5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                      <path d="M2 20h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
                 <span class="file-meta"></span>
                 <span class="file-helper">${localizedReplace}</span>
               </div>
@@ -997,7 +1005,22 @@ if (!window.customElements.get('drag-drop-control')) {
               </svg>
             </button>
           </div>
+          <div class="action-buttons-container" aria-hidden="true">
+            <button type="button" class="external-download-button" title="Download file" aria-label="Download file">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 2v16m0 0l-5-5m5 5l5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <path d="M2 20h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button type="button" class="external-clear-button" title="Remove file" aria-label="Remove file">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M8 8L16 16" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M16 8L8 16" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
           <div class="state-overlay" aria-hidden="true"></div>
+          <div role="status" aria-live="polite" aria-atomic="true" class="status-announcer" style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"></div>
         </div>
       `;
 
@@ -1008,13 +1031,19 @@ if (!window.customElements.get('drag-drop-control')) {
       this._preview = this._shadow.querySelector('.file-preview');
       this._previewName = this._shadow.querySelector('.file-preview .file-name');
       this._previewMeta = this._shadow.querySelector('.file-preview .file-meta');
+      this._downloadButton = this._shadow.querySelector('.download-file-button');
       this._iconLabel = this._shadow.querySelector('.file-indicator');
       this._fileInput = this._shadow.querySelector('.file-input');
       this._clearButton = this._shadow.querySelector('.clear-upload-button');
       this._overlay = this._shadow.querySelector('.state-overlay');
+      this._statusAnnouncer = this._shadow.querySelector('.status-announcer');
+      this._externalActionContainer = this._shadow.querySelector('.action-buttons-container');
+      this._externalDownloadButton = this._shadow.querySelector('.external-download-button');
+      this._externalClearButton = this._shadow.querySelector('.external-clear-button');
       this._errorPopup = null; // Will be created dynamically and appended to form
       this._popupPositionHandler = null;
       this._containerPositionModified = false;
+      this._previewNameClickHandler = null; // Store click handler reference
 
       // Watermark is already set in template with localized value
       // But update it if custom watermark was provided
@@ -1102,6 +1131,25 @@ if (!window.customElements.get('drag-drop-control')) {
           this.clearSelectedFile();
         });
       }
+
+      // Wire up external buttons for icon-only mode
+      if (this._externalClearButton) {
+        this._externalClearButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          this.clearSelectedFile();
+        });
+      }
+
+      if (this._externalDownloadButton) {
+        this._externalDownloadButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (this._files && this._files.length > 0) {
+            this.onFileItemClick(event, this._files[0]);
+          }
+        });
+      }
     }
 
     canInteract() {
@@ -1141,6 +1189,18 @@ if (!window.customElements.get('drag-drop-control')) {
         const uploadedFile = await this._uploadAndDescribeFile(file);
         const files = [uploadedFile];
         this.Value = serializeFilesToCollection(files);
+        
+        // Announce successful upload to screen readers
+        if (this._statusAnnouncer && uploadedFile.name) {
+          this._statusAnnouncer.textContent = `File uploaded successfully: ${uploadedFile.name}`;
+          // Clear after announcement
+          setTimeout(() => {
+            if (this._statusAnnouncer) {
+              this._statusAnnouncer.textContent = '';
+            }
+          }, 2000);
+        }
+        
         this.dispatchEvent(new CustomEvent('OnChanged', {
           detail: {
             value: this._value,
@@ -1160,6 +1220,18 @@ if (!window.customElements.get('drag-drop-control')) {
     clearSelectedFile() {
       if (!this.canInteract()) return;
       if (!Array.isArray(this._files) || this._files.length === 0) return;
+
+      // Remove click handler if present
+      if (this._previewNameClickHandler && this._previewName) {
+        this._previewName.removeEventListener('click', this._previewNameClickHandler);
+        this._previewNameClickHandler = null;
+      }
+
+      // Hide download button
+      if (this._downloadButton) {
+        this._downloadButton.style.display = 'none';
+        this._downloadButton.onclick = null;
+      }
 
       this._files = [];
       this.clearFileTypeError();
@@ -1209,6 +1281,28 @@ if (!window.customElements.get('drag-drop-control')) {
       };
     }
 
+    /**
+     * Handle file item click for download
+     * @param {Event} e - Click event
+     * @param {Object} file - File object with name, path, size, type properties
+     */
+    onFileItemClick(e, file) {
+      if (!file || !file.path) return;
+
+      // Create file info object compatible with base control's downloadFile method
+      const fileInfo = {
+        filePath: file.path,
+        fileName: file.name,
+        fileDataURL: file.dataURL || null,
+        fileRequestData: null
+      };
+
+      // Call base class method with file info
+      if (this.downloadFile) {
+        this.downloadFile(e, fileInfo);
+      }
+    }
+
     updatePreview() {
       if (!this._dropZone) return;
       const hasFile = Array.isArray(this._files) && this._files.length > 0;
@@ -1224,10 +1318,33 @@ if (!window.customElements.get('drag-drop-control')) {
         this._emptyState.setAttribute('aria-hidden', emptyVisible ? 'false' : 'true');
         this._emptyState.style.display = emptyVisible ? '' : 'none';
       }
+      // Handle internal clear button (for full details mode)
       if (this._clearButton) {
-        const showClear = hasFile && this.canInteract();
+        const showClear = hasFile && this.canInteract() && showInfoBlocks;
         this._clearButton.hidden = !showClear;
       }
+      
+      // Handle external action buttons (for icon-only mode)
+      const isIconOnly = !showInfoBlocks;
+      if (this._externalActionContainer) {
+        const showExternal = isIconOnly && hasFile && this.canInteract();
+        this._externalActionContainer.setAttribute('aria-hidden', showExternal ? 'false' : 'true');
+        this._externalActionContainer.style.display = showExternal ? 'flex' : 'none';
+      }
+      
+      if (this._externalDownloadButton) {
+        const file = hasFile ? this._files[0] : null;
+        const showDownload = isIconOnly && file && file.path;
+        this._externalDownloadButton.hidden = !showDownload;
+        if (showDownload && file) {
+          this._externalDownloadButton.setAttribute('aria-label', `Download ${file.name}`);
+        }
+      }
+      
+      if (this._externalClearButton) {
+        this._externalClearButton.hidden = !(isIconOnly && hasFile && this.canInteract());
+      }
+      
       let currentFile = null;
       if (this._previewName && this._previewMeta) {
         if (hasFile) {
@@ -1235,14 +1352,64 @@ if (!window.customElements.get('drag-drop-control')) {
           currentFile = file;
           const ext = getExtension(file.name);
           const friendlyType = getFriendlyTypeName(ext);
+          
+          // Update file name (no longer clickable - download button handles it)
           this._previewName.textContent = file.name;
+          this._previewName.style.cursor = '';
+          this._previewName.title = '';
+          
+          // Remove existing click handler from name if present
+          if (this._previewNameClickHandler) {
+            this._previewName.removeEventListener('click', this._previewNameClickHandler);
+            this._previewNameClickHandler = null;
+          }
+          
+          // Show/hide download button based on file path
+          if (file.path && this._downloadButton) {
+            this._downloadButton.style.display = 'flex';
+            // Set accessible name and description
+            const fileId = `file-name-${this.id || 'drag-drop'}`;
+            this._previewName.id = fileId;
+            this._downloadButton.setAttribute('aria-label', `Download ${file.name}`);
+            this._downloadButton.setAttribute('aria-describedby', fileId);
+            // Remove existing handler if present
+            const oldHandler = this._downloadButton.onclick;
+            if (oldHandler) {
+              this._downloadButton.onclick = null;
+            }
+            // Add new handler
+            this._downloadButton.onclick = (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              this.onFileItemClick(e, file);
+            };
+          } else if (this._downloadButton) {
+            this._downloadButton.style.display = 'none';
+            this._downloadButton.onclick = null;
+            if (this._previewName) {
+              this._previewName.removeAttribute('id');
+            }
+          }
+          
+          // Announce file name to screen readers
+          if (this._statusAnnouncer && file.name) {
+            this._statusAnnouncer.textContent = `File selected: ${file.name}`;
+            // Clear after announcement
+            setTimeout(() => {
+              if (this._statusAnnouncer) {
+                this._statusAnnouncer.textContent = '';
+              }
+            }, 1000);
+          }
+          
           const metaParts = [];
           metaParts.push(friendlyType);
           if (file.type) {
             metaParts.push(file.type);
           }
+          // Only show file size if it exists and is not 0
           const formattedSize = formatFileSize(file.size);
-          if (formattedSize) {
+          if (formattedSize && file.size !== 0 && this.checkExists(file.size)) {
             metaParts.push(formattedSize);
           }
           this._previewMeta.textContent = metaParts.join(' • ');
@@ -1252,6 +1419,9 @@ if (!window.customElements.get('drag-drop-control')) {
         } else {
           this._previewName.textContent = '';
           this._previewMeta.textContent = '';
+          if (this._previewName) {
+            this._previewName.removeAttribute('id');
+          }
           if (this._iconLabel) {
             this._iconLabel.textContent = '';
           }
@@ -1390,8 +1560,17 @@ if (!window.customElements.get('drag-drop-control')) {
           this._clearButton.hidden = true;
         } else {
           const hasFile = Array.isArray(this._files) && this._files.length > 0;
-          this._clearButton.hidden = !hasFile;
+          const showInfoBlocks = this._showInformation;
+          this._clearButton.hidden = !(hasFile && showInfoBlocks);
         }
+      }
+
+      // Handle external buttons
+      if (this._externalDownloadButton) {
+        this._externalDownloadButton.disabled = !interactive;
+      }
+      if (this._externalClearButton) {
+        this._externalClearButton.disabled = !interactive;
       }
 
       if (this._overlay) {

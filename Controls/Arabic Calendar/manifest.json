@@ -17,12 +17,15 @@
   "displayName": "Arabic Calendar",
   "tagName": "arabic-calendar",
   "valuePropertyID": "Value",
+  "datatypes": ["DateTime", "Date"],
   "supports": [
     "Value",
     "Width",
     "IsVisible",
     "IsEnabled",
-    "IsReadOnly"
+    "IsReadOnly",
+    "TabIndex",
+    "ControlExpression"
   ],
   "events": [
     {
