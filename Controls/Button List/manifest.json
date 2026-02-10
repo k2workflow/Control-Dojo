@@ -22,6 +22,14 @@
     { "id": "OnButtonClick", "displayname": "Clicked" }
   ],
   "properties": [
+     {
+      "id": "List",
+      "refreshdisplay": "true",
+      "friendlyname": "Datasource",
+      "type": "listdata",
+      "category": "Detail",
+      "initialvalue": "[{\"display\": \"Item 1\", \"value\": \"1\"},{\"display\": \"Item 2\",\"value\": \"2\"}]"
+    },
     {
       "id": "Value",
       "refreshdisplay": "true",
