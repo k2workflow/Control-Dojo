@@ -8,7 +8,7 @@ Control Dojo is a utility distributed "as is." You are responsible for building,
 - Control-specific `README.md` files inside the `Controls/` directory
 
 ### Specialized Solutions
-If you need tailored implementation, custom development, or dedicated guidance, you can engage the Nintex Professional Services team. Such engagements are billed separately. For official options and wording, see the Nintex documentation and Professional Services offerings on the Nintex website.
+If you need tailored implementation, custom development, or dedicated guidance, you can engage the [Nintex Professional Services](https://www.nintex.com/customer-success/professional-services/) team. Such engagements are billed separately, see the website for further information.
 
 ### Governance and Access
 - Write access to this repository is limited to the Nintex Cyberpunks maintainers noted in `.github/CODEOWNERS`

@@ -145,7 +145,7 @@ Control Dojo is released under the MIT License. See the `LICENSE` file for the f
 
 ## Support
 
-For assistance, review `SUPPORT.md` for detailed instructions on opening tickets through Nintex Customer Central. GitHub issues and pull requests are not monitored for this project.
+Control Dojo is a utility; you are responsible for your own custom controls. For self-service help and options (including Professional Services for paid engagements), see [.github/SUPPORT.md](.github/SUPPORT.md). GitHub issues and pull requests are not monitored for this project.
 
 ## Assets & Attribution
 
